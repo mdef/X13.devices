@@ -1,0 +1,40 @@
+Controller Family:
+'A' - Atmel Mega
+'S' - STM32F
+
+#define OD_DEV_UC_TYPE              'A'
+
+
+Controller SubType
+
+Atmel
+3 - ATMega1284P
+
+STM
+2 - STM32F051R
+3 - STM32F103
+
+#define OD_DEV_UC_SUBTYPE           '3'
+
+
+1st and 2nd PHY's
+
+S - Serial(UART)
+R - RFM12
+C - CC11__
+E - ENC28J60
+
+n - none
+
+#define OD_DEV_PHY1                 'S'
+#define OD_DEV_PHY2                 'n'
+
+
+Hardware Version
+
+#define OD_DEV_HW_TYP_H             '1'
+#define OD_DEV_HW_TYP_L             '1'
+
+Example:
+"R2D2__" Renesas RZ/A1M, with interface type - D as 1st PHY and interface type - 2 as 2nd PHY, HW Version __
+ 
