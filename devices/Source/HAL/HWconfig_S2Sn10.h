@@ -110,7 +110,7 @@ See LICENSE file for license details.
 void INIT_SYSTEM(void);
 
 void eeprom_init_hw(void);
-void eeprom_read(uint8_t *pBuf, uint16_t Addr, uint16_t Len);
-void eeprom_write(uint8_t *pBuf, uint16_t Addr, uint16_t Len);
+void eeprom_read(uint8_t *pBuf, uint32_t Addr, uint32_t Len);
+void eeprom_write(uint8_t *pBuf, uint32_t Addr, uint32_t Len);
 
 #endif  //  HWCONFIG_S2SN10_H

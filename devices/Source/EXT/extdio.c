@@ -23,7 +23,9 @@ See LICENSE file for license details.
 #elif (DIO_PORT_SIZE == 16)
 #define DIO_PORT_POS        4
 #define DIO_PORT_MASK       0x0F
-
+#elif (DIO_PORT_SIZE == 32)
+#define DIO_PORT_POS        5
+#define DIO_PORT_MASK       0x1F
 #endif  //  DIO_PORT_SIZE
 
 static const DIO_PORT_TYPE portnum2mask[EXTDIO_MAXPORT_NR] = PORTNUM_2_MASK;
@@ -66,13 +68,13 @@ static uint8_t dioCheckBase(uint16_t base)
   uint8_t port = dioBase2Port(base);
 
   if((port == EXTDIO_MAXPORT_NR) || (portnum2mask[port] & pinmask))
-    return 2;
-    
+    return 2; // Port not exist
+
   if((pin_read_mask[port] & pinmask) ||
      (pin_write_mask[port] & pinmask))
-    return 1;
+    return 1; // Port busy
 
-  return 0;
+  return 0; // Port free
 }
 
 // Check Index digital inp/out
@@ -211,28 +213,39 @@ void dioDeleteOD(subidx_t * pSubidx)
 
 void dioProc(void)
 {
-  uint8_t port = 0;
+  uint8_t port;
   DIO_PORT_TYPE state, mask;
   
-  while(port < EXTDIO_MAXPORT_NR)
+  for(port = 0; port < EXTDIO_MAXPORT_NR; port++)
   {
     mask = pin_read_mask[port];
     if(mask != 0)
     {
       state = dioReadPort(port) & mask;
-
-      if((pin_state_flag[port] ^ state) & mask)
+      
+      DIO_PORT_TYPE maskp = 1;
+      
+      while(maskp)
       {
-        pin_state_flag[port] = state;
-      }
-      else
-      {
-        state =  ((pPin_status[port] ^ state) & mask);
-        if(state)
+        DIO_PORT_TYPE maski = mask & maskp;
+        if(maski)
         {
-          pPin_status[port] ^= state;
-          pin_change_flag[port] |= state;
+          if((pin_state_flag[port] ^ state) & maski)
+          {
+            pin_state_flag[port] &= ~maski;
+            pin_state_flag[port] |= state & maski;
+          }
+          else
+          {
+            DIO_PORT_TYPE staterd =  ((pPin_status[port] ^ state) & maski);
+            if(staterd)
+            {
+              pPin_status[port] ^= staterd;
+              pin_change_flag[port] |= staterd;
+            }
+          }
         }
+        maskp <<= 1;
       }
     }
     
@@ -247,8 +260,6 @@ void dioProc(void)
       if(state)
         dioWritePort(port, state, 0);
     }
-
-    port++;
   }
 }
 #endif    //  EXTDIO_USED

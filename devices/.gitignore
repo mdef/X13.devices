@@ -2,3 +2,5 @@ stm32f051/logs/
 stm32f051/STM32F051/
 stm32f103/logs/
 stm32f103/STM32F103/
+*.cogui
+*.comarker

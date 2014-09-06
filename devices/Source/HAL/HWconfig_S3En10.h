@@ -32,14 +32,11 @@ See LICENSE file for license details.
 
 #define SPIe_PORT                   GPIOA
 #define SPIe_SCK_PIN                GPIO_Pin_5
-#define SPIe_SCK_PINSRC             GPIO_PinSource5
 #define SPIe_MISO_PIN               GPIO_Pin_6
-#define SPIe_MISO_PINSRC            GPIO_PinSource6
 #define SPIe_MOSI_PIN               GPIO_Pin_7
-#define SPIe_MOSI_PINSRC            GPIO_PinSource7
-#define SPIe_PINS_AF                GPIO_AF_0
 #define SPIe                        SPI1
 
+#define ENC_ENABLE_CLOCK()          RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE)
 #define ENC_SELECT()                GPIO_ResetBits(ENC_NSS_PORT, ENC_NSS_PIN)
 #define ENC_RELEASE()               {while((SPIe->SR & SPI_I2S_FLAG_BSY) != (uint16_t)RESET); \
                                       GPIO_SetBits(ENC_NSS_PORT, ENC_NSS_PIN);}
@@ -81,8 +78,8 @@ See LICENSE file for license details.
 void INIT_SYSTEM(void);
 
 void eeprom_init_hw(void);
-void eeprom_read(uint8_t *pBuf, uint16_t Addr, uint16_t Len);
-void eeprom_write(uint8_t *pBuf, uint16_t Addr, uint16_t Len);
+void eeprom_read(uint8_t *pBuf, uint32_t Addr, uint32_t Len);
+void eeprom_write(uint8_t *pBuf, uint32_t Addr, uint32_t Len);
 
 void _delay_ms(uint32_t ms);
 void _delay_us(uint32_t us);
