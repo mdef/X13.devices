@@ -42,7 +42,7 @@ uint16_t extCheckIdx(subidx_t * pSubidx)
 }
 
 // Register Object
-uint8_t extRegisterOD(indextable_t * pIdx)
+e_MQTTSN_RETURNS_t extRegisterOD(indextable_t * pIdx)
 {
   pIdx->cbRead = NULL;
   pIdx->cbWrite = NULL;

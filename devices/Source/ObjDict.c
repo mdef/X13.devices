@@ -281,8 +281,21 @@ static uint8_t readDeviceType(subidx_t *pSubidx, uint8_t *pLen, uint8_t *pBuf)
   return MQTTSN_RET_ACCEPTED;
 }
 
-#define RestoreSubindex(sidxn, pSubidx) eeprom_read((uint8_t *)pSubidx, (eelistOdbu +  (uint8_t)sidxn * sizeof(subidx_t)), sizeof(subidx_t));
-#define SaveSubindex(sidxn, pSubidx) eeprom_write((uint8_t *)pSubidx, (eelistOdbu +  (uint8_t)sidxn * sizeof(subidx_t)), sizeof(subidx_t));
+static void RestoreSubindex(uint16_t sidxn, subidx_t *pSubidx)
+{
+  uint16_t addr = sidxn;
+  addr *= sizeof(subidx_t);
+  addr += eelistOdbu;
+  eeprom_read((uint8_t *)pSubidx, addr, sizeof(subidx_t));
+}
+
+static void SaveSubindex(uint16_t sidxn, subidx_t *pSubidx)
+{
+  uint16_t addr = sidxn;
+  addr *= sizeof(subidx_t);
+  addr += eelistOdbu;
+  eeprom_write((uint8_t *)pSubidx, addr, sizeof(subidx_t));
+}
 
 // delete object
 static void deleteIndexOD(uint8_t id)
@@ -395,6 +408,8 @@ void InitOD(void)
 
   // Check Settings
   uint8_t Len = 1;
+  uint16_t  uiTmp;
+
   ReadOD(objNodeName, MQTTSN_FL_TOPICID_PREDEF, &Len, &ucTmp);
   if(ucTmp == 0xFF)                                                                   // Not Configured
   {
@@ -402,9 +417,6 @@ void InitOD(void)
     ucTmp = 0;
     WriteOD(objNodeName, MQTTSN_FL_TOPICID_PREDEF, 0, &ucTmp);                        // Device Name
 #ifdef RF_NODE
-#if (defined OD_DEFAULT_GROUP) || (defined ASLEEP)
-    uint16_t  uiTmp;
-#endif  //  (defined OD_DEFAULT_GROUP) || (defined ASLEEP)
 #ifndef ADDR_DEFAULT_RF
 #define ADDR_DEFAULT_RF 0xFF    // DHCP
 #endif  //  ADDR_DEFAULT_RF
@@ -454,13 +466,12 @@ void InitOD(void)
   }
 
   // Clear listOD
-  for(ucTmp = 0; ucTmp < OD_MAX_INDEX_LIST; ucTmp++)
-    ListOD[ucTmp].Index = 0xFFFF;
+  for(uiTmp = 0; uiTmp < OD_MAX_INDEX_LIST; uiTmp++)
+    ListOD[uiTmp].Index = 0xFFFF;
 
   // Clear Poll Variables
   idxUpdate = 0x80;
 
-  uint16_t uiTmp;
   for(uiTmp = 0; uiTmp < sizeof(exchg_data); uiTmp++)
     exchg_data[uiTmp] = 0;
 
@@ -468,10 +479,10 @@ void InitOD(void)
   //plcInit(exchg_data);
 
   // Load Saved Variables
-  uint8_t pos = 0;
-  for(ucTmp = 0; ucTmp < OD_MAX_INDEX_LIST; ucTmp++)
+  uint16_t pos = 0;
+  for(uiTmp = 0; uiTmp < OD_MAX_INDEX_LIST; uiTmp++)
   {
-    RestoreSubindex(ucTmp, &ListOD[pos].sidx);
+    RestoreSubindex(uiTmp, &ListOD[pos].sidx);
 
     if((ListOD[pos].sidx.Place == 0xFF) || (ListOD[pos].sidx.Place == 0x00) ||
        (extRegisterOD(&ListOD[pos]) != MQTTSN_RET_ACCEPTED))
@@ -501,7 +512,7 @@ indextable_t * getFreeIdxOD(void)
 }
 */
 
-uint8_t ReadOD(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf)
+e_MQTTSN_RETURNS_t ReadOD(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf)
 {
   indextable_t * pIndex = scanIndexOD(Id, Flags);
   if(pIndex == NULL)
@@ -515,7 +526,7 @@ uint8_t ReadOD(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf)
     return MQTTSN_RET_REJ_NOT_SUPP;
   }
   
-  uint8_t retval;
+  e_MQTTSN_RETURNS_t retval;
   retval = (pIndex->cbRead)(&pIndex->sidx, pLen, pBuf);
   if(retval != MQTTSN_RET_ACCEPTED)
     *pLen = 0;
@@ -523,7 +534,7 @@ uint8_t ReadOD(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf)
   return retval;
 }
 
-uint8_t WriteOD(uint16_t Id, uint8_t Flags, uint8_t Len, uint8_t *pBuf)
+e_MQTTSN_RETURNS_t WriteOD(uint16_t Id, uint8_t Flags, uint8_t Len, uint8_t *pBuf)
 {
   indextable_t * pIndex = scanIndexOD(Id, Flags);
   if(pIndex == NULL)
@@ -586,7 +597,7 @@ e_MQTTSN_RETURNS_t RegisterOD(MQTTSN_MESSAGE_t *pMsg)
   // Convert Topic Name to IDX record.
   subidx_t Subidx;
   uint8_t *pTopicName;
-  pTopicName = (uint8_t *)&pMsg->m.regist.TopicName;
+  pTopicName = (uint8_t *)&pMsg->regist.TopicName;
   Subidx.Place = *(pTopicName++);
   Subidx.Type = *(pTopicName++);
 
@@ -610,10 +621,10 @@ e_MQTTSN_RETURNS_t RegisterOD(MQTTSN_MESSAGE_t *pMsg)
   if(idx == 0xFFFF)
     return MQTTSN_RET_REJ_NOT_SUPP;
 
-  uint16_t TopicId = (pMsg->m.regist.TopicId[0]<<8) | pMsg->m.regist.TopicId[1];
+  uint16_t TopicId = (pMsg->regist.TopicId[0]<<8) | pMsg->regist.TopicId[1];
 
   // Get Last Index OD
-  uint8_t id = 0;
+  uint16_t id = 0;
   while(ListOD[id].Index != 0xFFFF)
   {
     if(memcmp((const void *)&Subidx, (const void *)&ListOD[id].sidx, sizeof(subidx_t)) == 0)
@@ -639,7 +650,7 @@ e_MQTTSN_RETURNS_t RegisterOD(MQTTSN_MESSAGE_t *pMsg)
     ListOD[id].Index = TopicId;
 
     // Save to eeprom
-    uint8_t i;
+    uint16_t i;
     subidx_t Subidx2;
     for(i = 0; i < OD_MAX_INDEX_LIST; i++)
     {
@@ -662,7 +673,7 @@ e_MQTTSN_RETURNS_t RegisterOD(MQTTSN_MESSAGE_t *pMsg)
 }
 
 // Read and pack object by Index. 
-uint8_t ReadODpack(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf)
+e_MQTTSN_RETURNS_t ReadODpack(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf)
 {
   indextable_t * pIndex = scanIndexOD(Id, Flags);
   if(pIndex == NULL)
@@ -676,7 +687,7 @@ uint8_t ReadODpack(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf)
     return MQTTSN_RET_REJ_NOT_SUPP;
   }
 
-  uint8_t retval = (pIndex->cbRead)(&pIndex->sidx, pLen, pBuf);
+  e_MQTTSN_RETURNS_t retval = (pIndex->cbRead)(&pIndex->sidx, pLen, pBuf);
 
   if(retval == MQTTSN_RET_ACCEPTED)    // Pack Object
   {
@@ -715,7 +726,7 @@ uint8_t ReadODpack(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf)
 }
 
 // Unpack and write object by Index.
-uint8_t WriteODpack(uint16_t Id, uint8_t Flags, uint8_t Len, uint8_t *pBuf)
+e_MQTTSN_RETURNS_t WriteODpack(uint16_t Id, uint8_t Flags, uint8_t Len, uint8_t *pBuf)
 {
   indextable_t * pIndex = scanIndexOD(Id, Flags);
   if(pIndex == NULL)

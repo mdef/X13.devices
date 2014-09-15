@@ -15,7 +15,7 @@ See LICENSE file for license details.
 
 void dioInit(void *pBuf);
 uint16_t dioCheckIdx(subidx_t * pSubidx);
-uint8_t dioRegisterOD(indextable_t *pIdx);
+e_MQTTSN_RETURNS_t dioRegisterOD(indextable_t *pIdx);
 void dioDeleteOD(subidx_t * pSubidx);
 void dioProc(void);
 

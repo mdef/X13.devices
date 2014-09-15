@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V8.0.1 - Copyright (C) 2014 Real Time Engineers Ltd.
+    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -142,7 +142,18 @@ only for ports that are using the MPU. */
 
 #else /* portUSING_MPU_WRAPPERS */
 
+#ifdef GCC_MEGA_AVR
+#if defined(__AVR_ATmega640__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)
+	#define PRIVILEGED_FUNCTION		__attribute__ ((hot, flatten))
+#elif defined(__AVR_ATmega664P__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284PA__)
+	#define PRIVILEGED_FUNCTION		__attribute__ ((hot, flatten))
+#else
+	#define PRIVILEGED_FUNCTION		__attribute__ ((hot))
+#endif
+#else
 	#define PRIVILEGED_FUNCTION
+#endif  //  GCC_MEGA_AVR
+
 	#define PRIVILEGED_DATA
 	#define portUSING_MPU_WRAPPERS 0
 

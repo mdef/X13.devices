@@ -1,6 +1,15 @@
+ATMEL/Debug/
+ATMEL/ATM1284P_D/
+ATMEL/ATM2560_D/
+ATMEL/ATM1284P/
+ATMEL/ATM2560/
+*.atsuo
 stm32f051/logs/
-stm32f051/STM32F051/
+stm32f051/S2En10/
+stm32f051/S2Sn10/
+stm32f051/S2ES10/
 stm32f103/logs/
-stm32f103/STM32F103/
+stm32f103/S3Sn10/
+stm32f103/S3En10/
 *.cogui
 *.comarker

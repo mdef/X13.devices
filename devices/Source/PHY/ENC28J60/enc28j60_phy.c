@@ -355,8 +355,8 @@ static void udp_filter(uint16_t len)
     if(pRx_buf == NULL)
       return;
       
-    enc28j60_GetPacket((void*)pRx_buf->u.raw, len);
-    memcpy(pRx_buf->addr.LAN_ADDR, ip->sender_ip, 4);
+    enc28j60_GetPacket((void*)pRx_buf->raw, len);
+    memcpy(pRx_buf->LAN_ADDR, ip->sender_ip, 4);
     pRx_buf->Length = len;
     xQueueSend(enc_out_queue, &pRx_buf, 0);
   }
@@ -417,11 +417,11 @@ void ENC28J60_Send(void *pBuf)
   ip_packet_t *ip = (void*)(frame->data);
   udp_packet_t *udp = (void*)(ip->data);
 
-  memcpy(ip->target_ip, &(((MQ_t *)pBuf)->addr.LAN_ADDR), 4);
+  memcpy(ip->target_ip, &(((MQ_t *)pBuf)->LAN_ADDR), 4);
   udp->target_port = MQTTSN_UDP_PORT;
   udp->sender_port = MQTTSN_UDP_PORT;
   uint16_t len = ((MQ_t *)pBuf)->Length;
-  memcpy((void*)(udp->data), &(((MQ_t *)pBuf)->u.raw), len);
+  memcpy((void*)(udp->data), &(((MQ_t *)pBuf)->raw), len);
   vPortFree(pBuf);
   udp_send(len);
 }

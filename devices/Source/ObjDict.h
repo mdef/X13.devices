@@ -109,8 +109,8 @@ typedef struct
   uint16_t    Base;
 }subidx_t;
 
-typedef uint8_t (*cbRead_t)(subidx_t * pSubidx, uint8_t *pLen, uint8_t *pBuf);  // Callback Read
-typedef uint8_t (*cbWrite_t)(subidx_t * pSubidx, uint8_t Len, uint8_t *pBuf);   // Callback Write
+typedef e_MQTTSN_RETURNS_t (*cbRead_t)(subidx_t * pSubidx, uint8_t *pLen, uint8_t *pBuf);  // Callback Read
+typedef e_MQTTSN_RETURNS_t (*cbWrite_t)(subidx_t * pSubidx, uint8_t Len, uint8_t *pBuf);   // Callback Write
 typedef uint8_t (*cbPoll_t)(subidx_t * pSubidx, uint8_t sleep);                  // Callback Poll
 
 // Structure for creating entries
@@ -160,15 +160,15 @@ enum
 } eEEPROMAddr;
 
 void InitOD(void);
-uint8_t ReadOD(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf);
-uint8_t WriteOD(uint16_t Id, uint8_t Flags, uint8_t Len, uint8_t *pBuf);
+e_MQTTSN_RETURNS_t ReadOD(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf);
+e_MQTTSN_RETURNS_t WriteOD(uint16_t Id, uint8_t Flags, uint8_t Len, uint8_t *pBuf);
 
 uint8_t MakeTopicName(uint8_t RecNR, uint8_t *pBuf);
 void RegAckOD(uint16_t index);
 e_MQTTSN_RETURNS_t RegisterOD(MQTTSN_MESSAGE_t *pMsg);
 indextable_t * getFreeIdxOD(void);
 
-uint8_t ReadODpack(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf);
-uint8_t WriteODpack(uint16_t Id, uint8_t Flags, uint8_t Len, uint8_t *pBuf);
+e_MQTTSN_RETURNS_t ReadODpack(uint16_t Id, uint8_t Flags, uint8_t *pLen, uint8_t *pBuf);
+e_MQTTSN_RETURNS_t WriteODpack(uint16_t Id, uint8_t Flags, uint8_t Len, uint8_t *pBuf);
 
 #endif

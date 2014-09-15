@@ -56,7 +56,13 @@ static DIO_PORT_TYPE dioBase2Mask(uint16_t base)
 // Convert Base to Port Number
 static uint8_t dioBase2Port(uint16_t base)     // Digital Ports
 {
-  uint8_t tmp = base>>DIO_PORT_POS;
+  uint8_t tmp;
+#ifdef EXTDIO_BASE_OFFSET
+  tmp = (base>>DIO_PORT_POS) - EXTDIO_BASE_OFFSET;
+#else
+  tmp = (base>>DIO_PORT_POS);
+#endif  //  EXTDIO_BASE_OFFSET
+
   if(tmp >= EXTDIO_MAXPORT_NR)
     return EXTDIO_MAXPORT_NR;
   return tmp;
@@ -106,7 +112,7 @@ void dioInit(void *pBuf)
 }
 
 // Read digital Inputs
-static uint8_t dioReadOD(subidx_t * pSubidx, uint8_t *pLen, uint8_t *pBuf)
+e_MQTTSN_RETURNS_t dioReadOD(subidx_t * pSubidx, uint8_t *pLen, uint8_t *pBuf)
 {
   uint16_t base = pSubidx->Base;
   DIO_PORT_TYPE state = pPin_status[dioBase2Port(base)];
@@ -121,7 +127,7 @@ static uint8_t dioReadOD(subidx_t * pSubidx, uint8_t *pLen, uint8_t *pBuf)
 }
 
 // Write DIO Object's
-static uint8_t dioWriteOD(subidx_t * pSubidx, uint8_t Len, uint8_t *pBuf)
+e_MQTTSN_RETURNS_t dioWriteOD(subidx_t * pSubidx, uint8_t Len, uint8_t *pBuf)
 {
   uint16_t base = pSubidx->Base;
   uint8_t state = *pBuf;
@@ -141,19 +147,19 @@ static uint8_t dioWriteOD(subidx_t * pSubidx, uint8_t Len, uint8_t *pBuf)
 }
 
 // Poll Procedure
-static uint8_t dioPollOD(subidx_t * pSubidx, uint8_t sleep)
+uint8_t dioPollOD(subidx_t * pSubidx, uint8_t sleep)
 {
   uint16_t base = pSubidx->Base;
   return ((pin_change_flag[dioBase2Port(base)] & dioBase2Mask(base)) != 0) ? 1 : 0;
 }
 
 // Register digital inp/out/pwm Object
-uint8_t dioRegisterOD(indextable_t *pIdx)
+e_MQTTSN_RETURNS_t dioRegisterOD(indextable_t *pIdx)
 {
   uint16_t base = pIdx->sidx.Base;
   if(dioCheckBase(base) != 0)
     return MQTTSN_RET_REJ_INV_ID;
-  
+
   uint8_t port = dioBase2Port(base);
   DIO_PORT_TYPE mask = dioBase2Mask(base);
   pin_change_flag[port] &= ~mask;
@@ -195,7 +201,6 @@ uint8_t dioRegisterOD(indextable_t *pIdx)
 
   pIdx->cbRead = &dioReadOD;
   pIdx->cbWrite = &dioWriteOD;
-
   return MQTTSN_RET_ACCEPTED;
 }
 

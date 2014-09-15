@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd.
+    FreeRTOS V8.0.1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -83,16 +83,11 @@ extern "C" {
 
 /* Type definitions. */
 #define portCHAR		char
-#define portFLOAT		float
-#define portDOUBLE		double
-#define portLONG		long
-#define portSHORT		short
-#define portSTACK_TYPE	uint32_t
-#define portBASE_TYPE	long
+#define portBASE_TYPE	char
 
-typedef portSTACK_TYPE StackType_t;
-typedef long BaseType_t;
-typedef unsigned long UBaseType_t;
+typedef uint8_t			StackType_t;
+typedef signed char		BaseType_t;
+typedef unsigned char	UBaseType_t;
 
 #if( configUSE_16_BIT_TICKS == 1 )
 	typedef uint16_t TickType_t;
@@ -103,89 +98,39 @@ typedef unsigned long UBaseType_t;
 #endif
 /*-----------------------------------------------------------*/
 
+/* Critical section management. */
+#define portENTER_CRITICAL()		asm volatile ( "in		__tmp_reg__, __SREG__" :: );	\
+									asm volatile ( "cli" :: );								\
+									asm volatile ( "push	__tmp_reg__" :: )
+
+#define portEXIT_CRITICAL()			asm volatile ( "pop		__tmp_reg__" :: );				\
+									asm volatile ( "out		__SREG__, __tmp_reg__" :: )
+
+#define portDISABLE_INTERRUPTS()	asm volatile ( "cli" :: );
+#define portENABLE_INTERRUPTS()		asm volatile ( "sei" :: );
+/*-----------------------------------------------------------*/
+
 /* Architecture specifics. */
 #define portSTACK_GROWTH			( -1 )
 #define portTICK_PERIOD_MS			( ( TickType_t ) 1000 / configTICK_RATE_HZ )
-#define portBYTE_ALIGNMENT			8
+#define portBYTE_ALIGNMENT			1
+#define portNOP()					asm volatile ( "nop" );
 /*-----------------------------------------------------------*/
 
-
-/* Scheduler utilities. */
-extern void vPortYield( void );
-#define portNVIC_INT_CTRL_REG		( * ( ( volatile uint32_t * ) 0xe000ed04 ) )
-#define portNVIC_PENDSVSET_BIT		( 1UL << 28UL )
+/* Kernel utilities. */
+extern void vPortYield( void ) __attribute__ ( ( naked ) );
 #define portYIELD()					vPortYield()
-#define portEND_SWITCHING_ISR( xSwitchRequired ) if( xSwitchRequired ) portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT
-#define portYIELD_FROM_ISR( x ) portEND_SWITCHING_ISR( x )
 /*-----------------------------------------------------------*/
 
-/* Critical section management. */
-extern void vPortEnterCritical( void );
-extern void vPortExitCritical( void );
-extern uint32_t ulPortSetInterruptMask( void );
-extern void vPortClearInterruptMask( uint32_t ulNewMaskValue );
-#define portSET_INTERRUPT_MASK_FROM_ISR()		ulPortSetInterruptMask()
-#define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	vPortClearInterruptMask(x)
-#define portDISABLE_INTERRUPTS()				ulPortSetInterruptMask()
-#define portENABLE_INTERRUPTS()					vPortClearInterruptMask(0)
-#define portENTER_CRITICAL()					vPortEnterCritical()
-#define portEXIT_CRITICAL()						vPortExitCritical()
-/*-----------------------------------------------------------*/
-
-/* Task function macros as described on the FreeRTOS.org WEB site.  These are
-not necessary for to use this port.  They are defined so the common demo files
-(which build with all the ports) will build. */
+#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)
+/* Task function macros as described on the FreeRTOS.org WEB site. */
+// This changed to add .lowtext tag for the linker for ATmega2560 and ATmega2561. To make sure they are loaded in low memory.
+#define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters ) __attribute__ ((section (".lowtext")))
+#else
 #define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
+#endif
+
 #define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
-/*-----------------------------------------------------------*/
-
-/* Tickless idle/low power functionality. */
-#ifndef portSUPPRESS_TICKS_AND_SLEEP
-	extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime );
-	#define portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime ) vPortSuppressTicksAndSleep( xExpectedIdleTime )
-#endif
-/*-----------------------------------------------------------*/
-
-/* Architecture specific optimisations. */
-#ifndef configUSE_PORT_OPTIMISED_TASK_SELECTION
-	#define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
-#endif
-
-#if configUSE_PORT_OPTIMISED_TASK_SELECTION == 1
-
-	/* Generic helper function. */
-	__attribute__( ( always_inline ) ) static inline uint8_t ucPortCountLeadingZeros( uint32_t ulBitmap )
-	{
-	uint8_t ucReturn;
-
-		__asm volatile ( "clz %0, %1" : "=r" ( ucReturn ) : "r" ( ulBitmap ) );
-		return ucReturn;
-	}
-
-	/* Check the configuration. */
-	#if( configMAX_PRIORITIES > 32 )
-		#error configUSE_PORT_OPTIMISED_TASK_SELECTION can only be set to 1 when configMAX_PRIORITIES is less than or equal to 32.  It is very rare that a system requires more than 10 to 15 difference priorities as tasks that share a priority will time slice.
-	#endif
-
-	/* Store/clear the ready priorities in a bit map. */
-	#define portRECORD_READY_PRIORITY( uxPriority, uxReadyPriorities ) ( uxReadyPriorities ) |= ( 1UL << ( uxPriority ) )
-	#define portRESET_READY_PRIORITY( uxPriority, uxReadyPriorities ) ( uxReadyPriorities ) &= ~( 1UL << ( uxPriority ) )
-
-	/*-----------------------------------------------------------*/
-
-	#define portGET_HIGHEST_PRIORITY( uxTopPriority, uxReadyPriorities ) uxTopPriority = ( 31 - ucPortCountLeadingZeros( ( uxReadyPriorities ) ) )
-
-#endif /* configUSE_PORT_OPTIMISED_TASK_SELECTION */
-
-/*-----------------------------------------------------------*/
-
-#ifdef configASSERT
-	void vPortValidateInterruptPriority( void );
-	#define portASSERT_IF_INTERRUPT_PRIORITY_INVALID() 	vPortValidateInterruptPriority()
-#endif
-
-/* portNOP() is not required by this port. */
-#define portNOP()
 
 #ifdef __cplusplus
 }

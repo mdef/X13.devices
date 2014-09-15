@@ -36,6 +36,7 @@ void UART_Send(void *pBuf)
   if(xSemaphoreTake(uart_isr_free_flag, 0) == pdTRUE)
   {
     pUart_Tx_Buf = pBuf;
+    UART_TX_DATA = 0xC0;                                  // Send End Of Frame - Flush buffers
     UART_TX_ENABLE_INT();                                 // Enable the UARTx Transmit interrupt
   }
   else
@@ -63,7 +64,7 @@ void uart_rx_handler(BaseType_t * pxHigherPriorityTaskWoken)
     if((rx_len > 1) && (rx_len == (rx_pos - 1)))
     {
       UART_ADDR_t s_addr = UART_PHY;
-      memcpy(pRx_buf->addr.UART_ADDR, &s_addr, sizeof(UART_ADDR_t));
+      memcpy(pRx_buf->UART_ADDR, &s_addr, sizeof(UART_ADDR_t));
       xQueueSendFromISR(uart_out_queue, &pRx_buf, pxHigherPriorityTaskWoken);
     }
 
@@ -99,7 +100,7 @@ void uart_rx_handler(BaseType_t * pxHigherPriorityTaskWoken)
   }
   else if(rx_pos <= rx_len)
   {
-    pRx_buf->u.raw[rx_pos - 1] = data;
+    pRx_buf->raw[rx_pos - 1] = data;
     rx_pos++;
   }
   else  // overflow
@@ -125,7 +126,7 @@ start_tx_handler:
     tx_len = data;
   }
   else if(tx_pos <= tx_len)
-    data = pUart_Tx_Buf->u.raw[tx_pos - 1];
+    data = pUart_Tx_Buf->raw[tx_pos - 1];
   else if(tx_pos == (tx_len + 1))
   {
     taskENTER_CRITICAL();

@@ -359,7 +359,7 @@ typedef struct sMQTTSN_MESSAGE
     sMQTTSN_MSG_WILLMSGUPD_t    willmsgupd;
     sMQTTSN_MSG_WILLMSGRESP_t   willmsgresp;
     sMQTTSN_MSG_FORWARD_t       forward;
-  }m;
+  };
 } MQTTSN_MESSAGE_t;
 
 typedef struct sMQ
@@ -370,14 +370,14 @@ typedef struct sMQ
 #ifdef PHY2_ADDR_t
     uint8_t         phy2[sizeof(PHY2_ADDR_t)];
 #endif
-  }addr;
+  };
   
   uint8_t         Length;
   union
   {
     uint8_t           raw[sizeof(MQTTSN_MESSAGE_t)];
     MQTTSN_MESSAGE_t   mq;
-  } u;
+  };
 } MQ_t;
 
 typedef struct sMQ_MSG

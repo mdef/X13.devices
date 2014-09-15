@@ -1,5 +1,6 @@
 Controller Family:
 'A' - Atmel Mega
+'N' - NXP
 'S' - STM32F
 
 #define OD_DEV_UC_TYPE              'A'
@@ -8,7 +9,12 @@ Controller Family:
 Controller SubType
 
 Atmel
+1 - ATMega328P
 3 - ATMega1284P
+4 - ATMega2560 / Arduino - Mega 2560
+
+NXP
+5 - LPC1769
 
 STM
 2 - STM32F051R
