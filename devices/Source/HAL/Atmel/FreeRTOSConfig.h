@@ -13,10 +13,6 @@
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
 
-/* Ensure stdint is only used by the compiler, and not the assembler. */
-#include <stdint.h>
-extern uint32_t SystemCoreClock;
-
 #define configUSE_PREEMPTION                    1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_TICKLESS_IDLE                 0
@@ -32,9 +28,9 @@ extern uint32_t SystemCoreClock;
 #define configTOTAL_HEAP_SIZE                   (1024)
 #endif
 
-#define configMAX_TASK_NAME_LEN                 3
+#define configMAX_TASK_NAME_LEN                 4
 #define configUSE_16_BIT_TICKS                  1
-#define configIDLE_SHOULD_YIELD                 0
+#define configIDLE_SHOULD_YIELD                 1
 #define configUSE_MUTEXES                       0
 #define configUSE_RECURSIVE_MUTEXES             0
 #define configUSE_COUNTING_SEMAPHORES           0
@@ -47,7 +43,7 @@ extern uint32_t SystemCoreClock;
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                     0
 #define configUSE_TICK_HOOK                     0
-#define configCHECK_FOR_STACK_OVERFLOW          0
+#define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_MALLOC_FAILED_HOOK            0
 
 /* Run time and task stats gathering related definitions. */
@@ -56,7 +52,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_STATS_FORMATTING_FUNCTIONS    0
 
 /* Co-routine related definitions. */
-#define configUSE_CO_ROUTINES                   1
+#define configUSE_CO_ROUTINES                   0
 #define configMAX_CO_ROUTINE_PRIORITIES         2
 
 /* Software timer related definitions. */
@@ -77,12 +73,6 @@ header file. */
 #define INCLUDE_vTaskDelayUntil                 1
 #define INCLUDE_vTaskDelay                      0
 #define INCLUDE_xTaskResumeFromISR              0
-
-/* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
-standard names - or at least those used in the unmodified vector table. */
-#define vPortSVCHandler                         SVC_Handler
-#define xPortPendSVHandler                      PendSV_Handler
-#define xPortSysTickHandler                     SysTick_Handler
 
 #endif // FREERTOS_CONFIG_H
 

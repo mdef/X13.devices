@@ -15,15 +15,17 @@ See LICENSE file for license details.
 
 #define OD_DEV_TYP_LEN          6
 
-#define EXTDIO_BASE   0x0080
-#define EXTAIN_BASE   0x0100
-#define EXTPWM_BASE   0x0200
+#define EXTDIO_BASE             0x0080
+#define EXTAIN_BASE             0x0100
+#define EXTPWM_BASE             0x0200
 
 #ifdef EXTDIO_USED
 #if (DIO_PORT_SIZE == 8)
-#define DIO_PORT_TYPE       uint8_t
+#define DIO_PORT_TYPE           uint8_t
 #elif (DIO_PORT_SIZE == 16)
-#define DIO_PORT_TYPE       uint16_t
+#define DIO_PORT_TYPE           uint16_t
+#elif (DIO_PORT_SIZE == 32)
+#define DIO_PORT_TYPE           uint32_t
 #else
 #error DIO_PORT_SIZE unknown size
 #endif  //  DIO_PORT_SIZE
@@ -34,6 +36,7 @@ typedef enum
   DIO_MODE_IN_PD,
   DIO_MODE_IN_PU,
   DIO_MODE_OUT,
+  DIO_MODE_AIN,
 }eDIOmode_t;
 #endif  //  EXTDIO_USED
 
@@ -64,11 +67,12 @@ typedef enum
   objPROGMEM  = 'F',  // FLASH
   objEEMEM    = 'E',  // EEPROM
   objAin      = 'A',  // Analog Input
-  //    objAout     = 'D',  // Analog Output
+  objAout     = 'D',  // Analog Output
   objDin      = 'I',  // Digital Input
   objDout     = 'O',  // Digital Output
   objPWM      = 'P',  // LED PWM out
   objSer      = 'S',  // Serial port, S.0-5 (1200-38400)
+  objMerker   = 'M',  // PLC variables
   objTWI      = 'T',  // TWI
   objUsrExt   = 'X',  // User extensions
 }eObjPlace_t;

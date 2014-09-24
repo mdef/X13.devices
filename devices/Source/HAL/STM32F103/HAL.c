@@ -23,6 +23,10 @@ void INIT_SYSTEM(void)
 #include "hal_dio.c"
 #endif  //  EXTDIO_USED
 
+#ifdef EXTAIN_USED
+#include "hal_ain.c"
+#endif  //  EXTAIN_USED
+
 // Optimisation Level 1
 void _delay_ms(uint32_t ms)
 {

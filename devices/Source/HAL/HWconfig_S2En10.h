@@ -23,7 +23,7 @@ See LICENSE file for license details.
 // DIO Section
 #define DIO_PORT_SIZE               16
 #define EXTDIO_MAXPORT_NR           3                                     // Number of digital Ports
-#define PORTNUM_2_MASK              {(uint16_t)0x60F0, (uint16_t)0xF000, (uint16_t)0x0000}
+#define EXTDIO_PORTNUM2MASK         {(uint16_t)0x60F0, (uint16_t)0xF000, (uint16_t)0x0000}
 // End DIO Section
 
 // FRAM Section
@@ -71,7 +71,7 @@ See LICENSE file for license details.
 #define ADDR_BROADCAST_PHY1         (PHY1_ADDR_t)inet_addr(255,255,255,255)
 #define ADDR_UNDEF_PHY1             (PHY1_ADDR_t)inet_addr(255,255,255,255)
 #define ADDR_BROADCAST_LAN          (PHY1_ADDR_t)inet_addr(255,255,255,255)
-#define LAN_ADDR                    phy1
+#define LAN_ADDR                    phy1addr
 
 // Object's Dictionary Section
 #define OD_DEV_UC_TYPE              'S'

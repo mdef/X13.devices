@@ -10,12 +10,12 @@ BSD New License
 See LICENSE file for license details.
 */
 
-#ifndef HWCONFIG_A1SN11_H
-#define HWCONFIG_A1SN11_H
+#ifndef HWCONFIG_A1CN11_H
+#define HWCONFIG_A1CN11_H
 
 // uNode Version 2.0
 // uc ATMega328p
-// Phy1: UART
+// Phy1: RF - CC1101
 
 // 0 - 7    PORTA - not exist
 // PORTB
@@ -49,7 +49,7 @@ See LICENSE file for license details.
 
 #include <avr/io.h>
 #include <avr/eeprom.h>
-//#include <util/delay.h>
+#include <util/delay.h>
 
 #include "../../FreeRTOS/include/FreeRTOS.h"
 #include "../../FreeRTOS/include/task.h"
@@ -63,53 +63,79 @@ See LICENSE file for license details.
 #define EXTDIO_MAXPORT_NR           2           // Number of digital Ports
 #define EXTDIO_BASE_OFFSET          2           // Numeration started from Port: 0 - A, 1 - B, 2 - C ...
 #define EXTDIO_PORTNUM2PORT         {(uint16_t)&PORTC, (uint16_t)&PORTD}
-#define EXTDIO_PORTNUM2MASK         {(uint8_t)0xC0, (uint8_t)0x03}
+#define EXTDIO_PORTNUM2MASK         {(uint8_t)0xC0, (uint8_t)0x00}
 // End DIO Section
 
-// UART Section
-#define UART_PORT                   PORTD
-#define UART_DDR                    DDRD
-#define UART_RX_PIN                 PD0
-#define UART_TX_PIN                 PD1
-#define UART_RX_DATA                UDR0
-#define UART_TX_DATA                UDR0
+// RF Section
+#define TxLEDon()                   PORTB &= ~(1<<PB0);
+#define RxLEDon()                   PORTB &= ~(1<<PB0);
+#define LEDsOff()                   PORTB |= (1<<PB0);
 
-#define UART_TX_DISABLE_INT()       UCSR0B &= ~(1<<UDRIE0)
-#define UART_TX_ENABLE_INT()        UCSR0B |= (1<<UDRIE0)
-// End UART Section
+#define RF_PORT                     PORTB
+#define RF_DDR                      DDRB
+#define RF_PIN                      PINB
+#define RF_PIN_SS                   PB2
+#define RF_PIN_MOSI                 PB3
+#define RF_PIN_MISO                 PB4
+#define RF_PIN_SCK                  PB5
 
-#define UART_PHY                    1
+// RF IRQ
+#define RF_IRQ_PORT                 PORTB
+#define RF_IRQ_DDR                  DDRB
+#define RF_IRQ_PIN                  PIND
+#define RF_PIN_IRQ                  PB1
+#define RF_IRQ_CFG()                {PCIFR = (1<<PCIF0); PCICR = (1<<PCIE0);}
+#define RF_DISABLE_IRQ()            PCMSK0 = 0
+#define RF_ENABLE_IRQ()             PCMSK0 = (1<<RF_PIN_IRQ)
+#define RF_INT_vect                 PCINT0_vect
+
+#define RF_PORT_INIT()              {PRR &= ~(1<<PRSPI);                      \
+                                     RF_PORT = (1<<RF_PIN_SS) | (1<<PB0);     \
+                                     RF_DDR = (1<<PB0) | (1<<RF_PIN_SCK) |    \
+                                        (1<<RF_PIN_MOSI) | (1<<RF_PIN_SS);    \
+                                     RF_IRQ_DDR &= ~(1<<RF_PIN_IRQ);          \
+                                     RF_IRQ_PORT |= (1<<RF_PIN_IRQ);}
+// RF SPI
+#define RF_SPI_DATA                 SPDR
+#define RF_SPI_BISY                 (!(SPSR &(1<<SPIF)))
+
+#if (F_CPU > 13000000UL)
+#define RF_SPI_INIT()               {SPCR = (1<<SPE) | (1<<MSTR); SPSR = 0;}            // F_CPU/4
+#else   //  (F_CPU <= 13000000UL)
+#define RF_SPI_INIT()               {SPCR = (1<<SPE) | (1<<MSTR); SPSR = (1<<SPI2X);}   // F_CPU/2
+#endif  //  (F_CPU > 13000000UL)
+//  End RF Section
+
+#define CC11_PHY                    1
 #define RF_NODE                     1
 
 #define PHY1_ADDR_t                 uint8_t
 #define RF_ADDR_t                   uint8_t
 #define ADDR_BROADCAST_PHY1         (PHY1_ADDR_t)0x00
 #define ADDR_UNDEF_PHY1             (PHY1_ADDR_t)0xFF
-#define ADDR_DEFAULT_RF             (RF_ADDR_t)0x04
+#define ADDR_DEFAULT_RF             (RF_ADDR_t)0x22
 #define ADDR_UNDEF_RF               (RF_ADDR_t)0xFF
 
 // Object's Dictionary Section
 #define OD_DEV_UC_TYPE              'A'
 #define OD_DEV_UC_SUBTYPE           '1'
-#define OD_DEV_PHY1                 'S'
+#define OD_DEV_PHY1                 'C'
 #define OD_DEV_PHY2                 'n'
 #define OD_DEV_HW_TYP_H             '1'
 #define OD_DEV_HW_TYP_L             '1'
-
 #define OD_ADDR_TYPE                objUInt8
 
-#include "../PHY/UART/uart_phy.h"
+#include "../PHY/CC11/cc11_phy.h"
 
-#define PHY1_Init                   UART_Init
-#define PHY1_Send                   UART_Send
-#define PHY1_Get                    UART_Get
 #define PHY1_NodeId                 objRFNodeId
 #define PHY1_GateId                 objGateID
-#define UART_ADDR                   phy1addr
-#define UART_ADDR_t                 uint8_t
+#define PHY1_Init                   CC11_Init
+#define PHY1_Send                   CC11_Send
+#define PHY1_Get                    CC11_Get
+#define CC_ADDR                     phy1addr
 
 #define eeprom_init_hw()
 #define eeprom_read(pBuf, Addr, Len)  eeprom_read_block((void *)pBuf, (const void *)Addr, (size_t)Len)
 #define eeprom_write(pBuf, Addr, Len) eeprom_write_block((const void *)pBuf, (void *)Addr, (size_t)Len)
 
-#endif // HWCONFIG_A1SN11_H
+#endif // HWCONFIG_A1CN11_H

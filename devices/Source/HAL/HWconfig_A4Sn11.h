@@ -131,10 +131,10 @@ See LICENSE file for license details.
 // DIO Section
 #define DIO_PORT_SIZE               8
 #define EXTDIO_MAXPORT_NR           11                                     // Number of digital Ports
-#define PORTNUM_2_PORT              {(uint16_t)&PORTA, (uint16_t)&PORTB, (uint16_t)&PORTC, (uint16_t)&PORTD,  \
+#define EXTDIO_PORTNUM2PORT         {(uint16_t)&PORTA, (uint16_t)&PORTB, (uint16_t)&PORTC, (uint16_t)&PORTD,  \
                                      (uint16_t)&PORTE, (uint16_t)&PORTF, (uint16_t)&PORTG, (uint16_t)&PORTH,  \
                                      (uint16_t)&PORTJ, (uint16_t)&PORTK, (uint16_t)&PORTL}
-#define PORTNUM_2_MASK              {(uint8_t)0x00, (uint8_t)0x00, (uint8_t)0x00, (uint8_t)0x70,  \
+#define EXTDIO_PORTNUM2MASK         {(uint8_t)0x00, (uint8_t)0x00, (uint8_t)0x00, (uint8_t)0x70,  \
                                      (uint8_t)0xC7, (uint8_t)0x00, (uint8_t)0xD8, (uint8_t)0x84,  \
                                      (uint8_t)0xFC, (uint8_t)0x00, (uint8_t)0x00}
 // End DIO Section
@@ -178,7 +178,7 @@ See LICENSE file for license details.
 #define PHY1_Get                    UART_Get
 #define PHY1_NodeId                 objRFNodeId
 #define PHY1_GateId                 objGateID
-#define UART_ADDR                   phy1
+#define UART_ADDR                   phy1addr
 #define UART_ADDR_t                 uint8_t
 
 #define eeprom_init_hw()

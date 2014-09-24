@@ -19,21 +19,20 @@ See LICENSE file for license details.
 #include "enc28j60_hw.h"
 #include "enc28j60_net.h"
 
-#define MAX_FRAME_BUF     120
+#define MAX_FRAME_BUF   (sizeof(eth_frame_t) + sizeof(ip_packet_t) + sizeof(udp_packet_t) + MQTTSN_MSG_SIZE)
+
 #define ip_broadcast (ip_addr | ~ip_mask)
 
 // node MAC & IP addresses
-static uint8_t   mac_addr[6];
-static uint32_t  ip_addr;
-static uint32_t  ip_mask;
-static uint32_t  ip_gateway;
+static uint8_t        mac_addr[6];
+static uint32_t       ip_addr;
+static uint32_t       ip_mask;
+static uint32_t       ip_gateway;
 // ARP record
-static uint32_t  arp_ip_addr;
-static uint8_t   arp_mac_addr[6];
-// Network data
-uint8_t   net_buf[MAX_FRAME_BUF];
+static uint32_t       arp_ip_addr;
+static uint8_t        arp_mac_addr[6];
 // Received packets queue 
-static QueueHandle_t      enc_out_queue;
+static QueueHandle_t  enc_out_queue = NULL;
 
 //////////////////////////////////////////////////////////////////////
 // Ethernet Section
@@ -42,20 +41,18 @@ static QueueHandle_t      enc_out_queue;
 // fields must be set:
 //  - frame.target_mac
 //  - frame.type
-static void eth_send(uint16_t len)
+static void eth_send(uint16_t len, eth_frame_t * pFrame)
 {
-  eth_frame_t *frame = (void *)net_buf;
-  memcpy(frame->sender_mac, mac_addr, 6);
-  enc28j60PacketSend(sizeof(eth_frame_t) + len, (uint8_t *)frame);
+  memcpy(pFrame->sender_mac, mac_addr, 6);
+  enc28j60PacketSend(sizeof(eth_frame_t) + len, (uint8_t *)pFrame);
 }
 
 // send Ethernet frame back
-static void eth_reply(uint16_t len)
+static void eth_reply(uint16_t len, eth_frame_t * pFrame)
 {
-  eth_frame_t *frame = (void *)net_buf;
-  memcpy(frame->target_mac, frame->sender_mac, 6);
-  memcpy(frame->sender_mac, mac_addr, 6);
-  enc28j60PacketSend(sizeof(eth_frame_t) + len, (uint8_t *)frame);
+  memcpy(pFrame->target_mac, pFrame->sender_mac, 6);
+  memcpy(pFrame->sender_mac, mac_addr, 6);
+  enc28j60PacketSend(sizeof(eth_frame_t) + len, (uint8_t *)pFrame);
 }
 // End Ethernet Section
 //////////////////////////////////////////////////////////////////////
@@ -64,14 +61,13 @@ static void eth_reply(uint16_t len)
 // ARP Section
 
 // resolve MAC address
-static void arp_resolve_req(uint32_t node_ip_addr)
+static void arp_resolve_req(uint32_t node_ip_addr, eth_frame_t * pFrame)
 {
-  eth_frame_t *frame = (void*)net_buf;
-  arp_message_t *arp = (void*)(frame->data);
+  arp_message_t *arp = (void*)(pFrame->data);
 
   // send request
-  memset(frame->target_mac, 0xff, 6);
-  frame->type = ETH_TYPE_ARP;
+  memset(pFrame->target_mac, 0xff, 6);
+  pFrame->type = ETH_TYPE_ARP;
   arp->hw_type = ARP_HW_TYPE_ETH;
   arp->proto_type = ARP_PROTO_TYPE_IP;
   arp->hw_addr_len = 6;
@@ -82,17 +78,16 @@ static void arp_resolve_req(uint32_t node_ip_addr)
   memset(arp->target_mac, 0x00, 6);
   memcpy(arp->target_ip, &node_ip_addr, 4);
 
-  eth_send(sizeof(arp_message_t));
+  eth_send(sizeof(arp_message_t), pFrame);
 }
 
 // process arp packet
-static void arp_filter(uint16_t len)
+static void arp_filter(uint16_t len, eth_frame_t * pFrame)
 {
   if(len < sizeof(arp_message_t))
     return;
 
-  eth_frame_t *frame = (void *)net_buf;
-  arp_message_t *arp = (void *)frame->data;
+  arp_message_t *arp = (void *)pFrame->data;
   
   enc28j60_GetPacket((void *)arp,  sizeof(arp_message_t));
 
@@ -108,7 +103,7 @@ static void arp_filter(uint16_t len)
     memcpy(arp->sender_mac, mac_addr, 6);
     memcpy(arp->target_ip, arp->sender_ip, 4);
     memcpy(arp->sender_ip, &ip_addr, 4);
-    eth_reply(sizeof(arp_message_t));
+    eth_reply(sizeof(arp_message_t), pFrame);
   }
   else if(arp->opcode == ARP_TYPE_RESPONSE)
   {
@@ -154,10 +149,9 @@ static uint16_t ip_cksum(uint32_t sum, uint8_t *buf, size_t len)
 //  - ip.dst
 //  - ip.proto
 // len is IP packet payload length
-static void ip_send(uint16_t len)
+static void ip_send(uint16_t len, eth_frame_t *pFrame)
 {
-  eth_frame_t *frame = (void *)net_buf;
-  ip_packet_t *ip = (void*)(frame->data);
+  ip_packet_t *ip = (void*)(pFrame->data);
   
   uint32_t t_ip;
   memcpy(&t_ip, ip->target_ip, 4);
@@ -165,7 +159,7 @@ static void ip_send(uint16_t len)
   // apply route
   if((t_ip == ip_broadcast) || (t_ip == ADDR_BROADCAST_LAN))
   {
-    memset(frame->target_mac, 0xFF, 6);
+    memset(pFrame->target_mac, 0xFF, 6);
   }
   else
   {
@@ -179,10 +173,10 @@ static void ip_send(uint16_t len)
       return;
 
     if(route_ip == arp_ip_addr)
-      memcpy(frame->target_mac, arp_mac_addr, 6);
+      memcpy(pFrame->target_mac, arp_mac_addr, 6);
     else
     {
-      arp_resolve_req(route_ip);
+      arp_resolve_req(route_ip, pFrame);
       return;
     }
   }
@@ -190,7 +184,7 @@ static void ip_send(uint16_t len)
   // send packet
   len += sizeof(ip_packet_t);
   
-  frame->type = ETH_TYPE_IP;
+  pFrame->type = ETH_TYPE_IP;
 
   ip->ver_head_len = 0x45;
   ip->tos = 0;
@@ -202,15 +196,14 @@ static void ip_send(uint16_t len)
   memcpy(ip->sender_ip, &ip_addr, 4);
   ip->cksum = ip_cksum(0, (void*)ip, sizeof(ip_packet_t));
 
-  eth_send(len);
+  eth_send(len, pFrame);
 }
 
 // send IP packet back
 // len is IP packet payload length
-static void ip_reply(uint16_t len)
+static void ip_reply(uint16_t len, eth_frame_t * pFrame)
 {
-  eth_frame_t *frame = (void *)net_buf;
-  ip_packet_t *ip = (void*)(frame->data);
+  ip_packet_t *ip = (void*)(pFrame->data);
 
   len += sizeof(ip_packet_t);
 
@@ -223,23 +216,22 @@ static void ip_reply(uint16_t len)
   memcpy(ip->sender_ip, &ip_addr, 4);
   ip->cksum = ip_cksum(0, (void*)ip, sizeof(ip_packet_t));
 
-  eth_reply(len);
+  eth_reply(len, pFrame);
 }
 
 #ifdef NET_WITH_ICMP
-static void icmp_filter(uint16_t len);
+static void icmp_filter(uint16_t len, eth_frame_t * pFrame);
 #endif  //  NET_WITH_ICMP
-static void udp_filter(uint16_t len);
+static void udp_filter(uint16_t len, eth_frame_t * pFrame);
 
 // process IP packet
-static void ip_filter(uint16_t len)
+static void ip_filter(uint16_t len, eth_frame_t * pFrame)
 {
   if(len < sizeof(ip_packet_t))
     return;
 
   uint16_t hcs;
-  eth_frame_t *frame = (void *)net_buf;
-  ip_packet_t *ip = (void*)(frame->data);
+  ip_packet_t *ip = (void*)(pFrame->data);
   
   enc28j60_GetPacket((void *)ip,  sizeof(ip_packet_t));
 
@@ -260,12 +252,12 @@ static void ip_filter(uint16_t len)
 #ifdef NET_WITH_ICMP
     case IP_PROTOCOL_ICMP:
       if(t_ip == ip_addr)
-        icmp_filter(len);
+        icmp_filter(len, pFrame);
       break;
 #endif  //  NET_WITH_ICMP
     case IP_PROTOCOL_UDP:
       if((t_ip == ip_addr) || (t_ip == ip_broadcast) || (t_ip == ADDR_BROADCAST_LAN))
-        udp_filter(len);
+        udp_filter(len, pFrame);
       break;
   }
 }
@@ -276,13 +268,12 @@ static void ip_filter(uint16_t len)
 //////////////////////////////////////////////////////////////////////
 // ICMP Section
 // process ICMP packet
-static void icmp_filter(uint16_t len)
+static void icmp_filter(uint16_t len, eth_frame_t * pFrame)
 {
   if((len < sizeof(icmp_echo_packet_t)) || (len > (MAX_FRAME_BUF - sizeof(ip_packet_t) - sizeof(eth_frame_t))))
     return;
   
-  eth_frame_t *frame = (void *)net_buf;
-  ip_packet_t *ip = (void*)frame->data;
+  ip_packet_t *ip = (void*)pFrame->data;
   icmp_echo_packet_t *icmp = (void*)ip->data;
   
   enc28j60_GetPacket((void *)icmp, sizeof(icmp_echo_packet_t));
@@ -293,7 +284,7 @@ static void icmp_filter(uint16_t len)
 
     icmp->type = ICMP_TYPE_ECHO_RPLY;
     icmp->cksum += 8; // update cksum
-    ip_reply(len);
+    ip_reply(len, pFrame);
   }
 }
 // End ICMP Section
@@ -309,10 +300,9 @@ static void icmp_filter(uint16_t len)
 //  - udp.sender_port
 //  - udp.target_port
 // uint16_t len is UDP data payload length
-static void udp_send(uint16_t len)
+static void udp_send(uint16_t len, eth_frame_t *pFrame)
 {
-  eth_frame_t *frame = (void *)net_buf;
-  ip_packet_t *ip = (void*)(frame->data);
+  ip_packet_t *ip = (void*)(pFrame->data);
   udp_packet_t *udp = (void*)(ip->data);
 
   len += sizeof(udp_packet_t);
@@ -324,17 +314,16 @@ static void udp_send(uint16_t len)
   udp->cksum = 0;
   udp->cksum = ip_cksum(len + IP_PROTOCOL_UDP, (uint8_t*)udp - 8, len + 8);
 
-  ip_send(len);
+  ip_send(len, pFrame);
 }
 
 // process UDP packet
-static void udp_filter(uint16_t len)
+static void udp_filter(uint16_t len, eth_frame_t * pFrame)
 {
   if(len < sizeof(udp_packet_t))
     return;
 
-  eth_frame_t *frame = (void *)net_buf;
-  ip_packet_t *ip = (void*)(frame->data);
+  ip_packet_t *ip = (void*)(pFrame->data);
   udp_packet_t *udp = (void*)(ip->data);
 
   enc28j60_GetPacket((void *)udp, sizeof(udp_packet_t));
@@ -347,7 +336,7 @@ static void udp_filter(uint16_t len)
     if(arp_ip_addr == 0)
     {
       memcpy(&arp_ip_addr, ip->sender_ip, 4);
-      memcpy(arp_mac_addr, frame->sender_mac, 6);
+      memcpy(arp_mac_addr, pFrame->sender_mac, 6);
     }
     
     MQ_t * pRx_buf;
@@ -364,35 +353,6 @@ static void udp_filter(uint16_t len)
 // End UDP Section
 //////////////////////////////////////////////////////////////////////
 
-// Main ENC28J60 Task
-static void enc28j60_task(void *pvParameters)
-{
-  // Init Variable
-  arp_ip_addr = 0;
-
-  while(1)
-  {
-    if(en28j60_DataRdy())
-    {
-      uint16_t len = enc28j60_GetPacketLen();
-      if(len > sizeof(eth_frame_t))
-      {
-        enc28j60_GetPacket((void *)net_buf,  sizeof(eth_frame_t));
-        eth_frame_t *frame = (void *)net_buf;
-        if(frame->type == ETH_TYPE_ARP)
-          arp_filter(len - sizeof(eth_frame_t));
-        else if(frame->type == ETH_TYPE_IP)
-          ip_filter(len - sizeof(eth_frame_t));
-      }
-      enc28j60_ClosePacket();
-    }
-
-    taskYIELD();
-  }
-
-  vTaskDelete(NULL);
-}
-
 void ENC28J60_Init(void)
 {
   uint8_t Len;
@@ -407,14 +367,18 @@ void ENC28J60_Init(void)
   //initialize enc28j60
   enc28j60Init(mac_addr);
 
-  enc_out_queue = xQueueCreate(4, sizeof(void *));
-  xTaskCreate(enc28j60_task, "en1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+  // Init Variable
+  arp_ip_addr = 0;
+
+  if(enc_out_queue == NULL)
+    enc_out_queue = xQueueCreate(4, sizeof(void *));
 }
 
 void ENC28J60_Send(void *pBuf)
 {
-  eth_frame_t *frame = (void*)net_buf;
-  ip_packet_t *ip = (void*)(frame->data);
+  eth_frame_t * pFrame = (void *)pvPortMalloc(MAX_FRAME_BUF);
+  
+  ip_packet_t *ip = (void*)(pFrame->data);
   udp_packet_t *udp = (void*)(ip->data);
 
   memcpy(ip->target_ip, &(((MQ_t *)pBuf)->LAN_ADDR), 4);
@@ -423,12 +387,39 @@ void ENC28J60_Send(void *pBuf)
   uint16_t len = ((MQ_t *)pBuf)->Length;
   memcpy((void*)(udp->data), &(((MQ_t *)pBuf)->raw), len);
   vPortFree(pBuf);
-  udp_send(len);
+  udp_send(len, pFrame);
+  
+  vPortFree(pFrame);
 }
 
 void ENC28J60_Get(void *pBuf)
 {
-  xQueueReceive(enc_out_queue, pBuf, portMAX_DELAY);
+  while(xQueueReceive(enc_out_queue, pBuf, 0) != pdTRUE)
+  {
+    if(en28j60_DataRdy())
+    {
+      uint16_t len = enc28j60_GetPacketLen();
+      if(len > sizeof(eth_frame_t))
+      {
+        eth_frame_t * pFrame = (void *)pvPortMalloc(MAX_FRAME_BUF);
+
+        if(pFrame != NULL)
+        {
+          enc28j60_GetPacket((void *)pFrame,  sizeof(eth_frame_t));
+
+          if(pFrame->type == ETH_TYPE_ARP)
+            arp_filter(len - sizeof(eth_frame_t), pFrame);
+          else if(pFrame->type == ETH_TYPE_IP)
+            ip_filter(len - sizeof(eth_frame_t), pFrame);
+            
+          vPortFree(pFrame);
+        }
+      }
+      enc28j60_ClosePacket();
+    }
+
+    taskYIELD();
+  }
 }
 
 #endif  //  ENC28J60_PHY

@@ -32,23 +32,33 @@ See LICENSE file for license details.
 #define RF_BASE_FREQ            868300000UL
 
 #define EXTDIO_USED             1
+//#define EXTAIN_USED             1
+//#define PLC_USED                1
 
-#if (defined CFG_S2SN10)
-#include "HAL/HWconfig_S2Sn10.h"
-#elif (defined CFG_S2EN10)
+#if   (defined CFG_S2EN10)
 #include "HAL/HWconfig_S2En10.h"
 #elif (defined CFG_S2ES10)
 #include "HAL/HWconfig_S2ES10.h"
-#elif (defined CFG_S3SN10)
-#include "HAL/HWconfig_S3Sn10.h"
+#elif (defined CFG_S2SN10)
+#include "HAL/HWconfig_S2Sn10.h"
 #elif (defined CFG_S3EN10)
 #include "HAL/HWconfig_S3En10.h"
+#elif (defined CFG_S3SN10)
+#include "HAL/HWconfig_S3Sn10.h"
+#elif (defined CFG_A1EN11)
+#include "HAL/HWconfig_A1En11.h"
+#elif (defined CFG_A1CN11)
+#include "HAL/HWconfig_A1Cn11.h"
+#elif (defined CFG_A1SC11)
+#include "HAL/HWconfig_A1SC11.h"
 #elif (defined CFG_A1SN11)
 #include "HAL/HWconfig_A1Sn11.h"
-#elif (defined CFG_A3SN11)
-#include "HAL/HWconfig_A3Sn11.h"
+#elif (defined CFG_A3CN11)
+#include "HAL/HWconfig_A3Cn11.h"
 #elif (defined CFG_A3SC11)
 #include "HAL/HWconfig_A3SC11.h"
+#elif (defined CFG_A3SN11)
+#include "HAL/HWconfig_A3Sn11.h"
 #elif (defined CFG_A4SN11)
 #include "HAL/HWconfig_A4Sn11.h"
 #else

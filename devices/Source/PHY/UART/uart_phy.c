@@ -16,16 +16,20 @@ See LICENSE file for license details.
 
 #ifdef UART_PHY
 
-static QueueHandle_t      uart_in_queue;
+static QueueHandle_t      uart_in_queue = NULL;
 static QueueHandle_t      uart_out_queue;
 static SemaphoreHandle_t  uart_isr_free_flag;
 static MQ_t             * pUart_Tx_Buf;
 
 void UART_Init(void)
 {
-  uart_in_queue  = xQueueCreate(8, sizeof(void *));
-  uart_out_queue = xQueueCreate(4, sizeof(void *));
-  uart_isr_free_flag = xSemaphoreCreateBinary();
+  if(uart_in_queue == NULL)
+  {
+    uart_in_queue  = xQueueCreate(8, sizeof(void *));
+    uart_out_queue = xQueueCreate(4, sizeof(void *));
+    uart_isr_free_flag = xSemaphoreCreateBinary();
+  }
+
   xSemaphoreGive(uart_isr_free_flag);
 
   uart_init_hw();

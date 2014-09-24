@@ -97,7 +97,7 @@ mqttsn_parser_task_lbl1:
     {
       if(vMQTTSN.Status == MQTTSN_STATUS_SEARCHGW)
       {
-        memcpy(vMQTTSN.GatewayAddr, pPHY1outBuf->phy1, sizeof(PHY1_ADDR_t));
+        memcpy(vMQTTSN.GatewayAddr, pPHY1outBuf->phy1addr, sizeof(PHY1_ADDR_t));
         vMQTTSN.GwId = pPHY1outBuf->mq.gwinfo.GwId;
         vMQTTSN.Status = MQTTSN_STATUS_OFFLINE;
         vMQTTSN.Tretry = 0;
@@ -116,7 +116,7 @@ mqttsn_parser_task_lbl1:
       vMQTTSN.Tretry = 0;
     }
     // Message from gateway
-    else if(memcmp(pPHY1outBuf->phy1, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t)) == 0)
+    else if(memcmp(pPHY1outBuf->phy1addr, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t)) == 0)
     {
       switch(MsgType)
       {
@@ -233,7 +233,7 @@ mqttsn_parser_task_lbl1:
             // Direction Gateway to PHY2
             if(Length == (MQTTSN_SIZEOF_MSG_FORWARD + sizeof(PHY2_ADDR_t)))
             {
-              memcpy(pPHY1outBuf->phy2, pPHY1outBuf->mq.forward.wNodeID, sizeof(PHY2_ADDR_t));
+              memcpy(pPHY1outBuf->phy2addr, pPHY1outBuf->mq.forward.wNodeID, sizeof(PHY2_ADDR_t));
               // truncate header
               pPHY1outBuf->Length -= Length;
               memcpy(&pPHY1outBuf->raw[0], &pPHY1outBuf->raw[Length], pPHY1outBuf->Length);
@@ -245,7 +245,7 @@ mqttsn_parser_task_lbl1:
               // Direction: Gateway to Remote node on PHY1
             if(Length == (MQTTSN_SIZEOF_MSG_FORWARD + sizeof(PHY1_ADDR_t)))
             {
-              memcpy(pPHY1outBuf->phy1, pPHY1outBuf->mq.forward.wNodeID, sizeof(PHY1_ADDR_t));
+              memcpy(pPHY1outBuf->phy1addr, pPHY1outBuf->mq.forward.wNodeID, sizeof(PHY1_ADDR_t));
               // truncate header
               pPHY1outBuf->Length -= Length;
               memcpy(&pPHY1outBuf->raw[0], &pPHY1outBuf->raw[Length], pPHY1outBuf->Length);
@@ -268,7 +268,7 @@ mqttsn_parser_task_lbl1:
         {
           // Send Gateway Info message
           PHY1_ADDR_t s_addr = ADDR_BROADCAST_PHY1;
-          memcpy(pPHY1outBuf->phy1, &s_addr, sizeof(PHY1_ADDR_t));
+          memcpy(pPHY1outBuf->phy1addr, &s_addr, sizeof(PHY1_ADDR_t));
           pPHY1outBuf->Length = (MQTTSN_SIZEOF_MSG_GWINFO + sizeof(PHY1_ADDR_t));
           pPHY1outBuf->mq.Length = (MQTTSN_SIZEOF_MSG_GWINFO + sizeof(PHY1_ADDR_t));
           pPHY1outBuf->mq.MsgType = MQTTSN_MSGTYP_GWINFO;
@@ -294,8 +294,8 @@ mqttsn_parser_task_lbl1:
           pPHY1outBuf->mq.Length = Size;
           pPHY1outBuf->mq.MsgType = MQTTSN_MSGTYP_FORWARD;
           pPHY1outBuf->mq.forward.Ctrl = 0;   // ?? TTL
-          memcpy(pPHY1outBuf->mq.forward.wNodeID, pPHY1outBuf->phy1, sizeof(PHY1_ADDR_t));
-          memcpy(pPHY1outBuf->phy1, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t));
+          memcpy(pPHY1outBuf->mq.forward.wNodeID, pPHY1outBuf->phy1addr, sizeof(PHY1_ADDR_t));
+          memcpy(pPHY1outBuf->phy1addr, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t));
           PHY1_Send(pPHY1outBuf);
           goto mqttsn_parser_task_lbl1;
         }
@@ -325,7 +325,7 @@ mqttsn_forwarder_task_lbl1:
         {
           // Send Gateway Info message
           PHY2_ADDR_t s_addr = ADDR_BROADCAST_PHY2;
-          memcpy(pPHY2outBuf->phy2, &s_addr, sizeof(PHY2_ADDR_t));
+          memcpy(pPHY2outBuf->phy2addr, &s_addr, sizeof(PHY2_ADDR_t));
           uint8_t Length = MQTTSN_SIZEOF_MSG_GWINFO;
 
           pPHY2outBuf->mq.MsgType = MQTTSN_MSGTYP_GWINFO;
@@ -357,8 +357,8 @@ mqttsn_forwarder_task_lbl1:
           pPHY2outBuf->mq.Length = Size;
           pPHY2outBuf->mq.MsgType = MQTTSN_MSGTYP_FORWARD;
           pPHY2outBuf->mq.forward.Ctrl = 0;   // ?? TTL
-          memcpy(pPHY2outBuf->mq.forward.wNodeID, pPHY2outBuf->phy2, sizeof(PHY2_ADDR_t));
-          memcpy(pPHY2outBuf->phy1, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t));
+          memcpy(pPHY2outBuf->mq.forward.wNodeID, pPHY2outBuf->phy2addr, sizeof(PHY2_ADDR_t));
+          memcpy(pPHY2outBuf->phy1addr, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t));
           PHY1_Send(pPHY2outBuf);
           goto mqttsn_forwarder_task_lbl1;
         }
@@ -431,7 +431,7 @@ static void mqttsn_send_searchgw(void)
     return;
 
   PHY1_ADDR_t dst_addr = ADDR_BROADCAST_PHY1;                // Broadcast
-  memcpy(pSearchGW->phy1, &dst_addr, sizeof(PHY1_ADDR_t));
+  memcpy(pSearchGW->phy1addr, &dst_addr, sizeof(PHY1_ADDR_t));
   pSearchGW->Length = MQTTSN_SIZEOF_MSG_SEARCHGW;
   pSearchGW->mq.Length = MQTTSN_SIZEOF_MSG_SEARCHGW;
   pSearchGW->mq.MsgType = MQTTSN_MSGTYP_SEARCHGW;
@@ -506,7 +506,7 @@ static void mqttsn_send_connect(void)
   Length += MQTTSN_SIZEOF_MSG_CONNECT;
   pConnect->Length = Length;
   pConnect->mq.Length = Length;
-  memcpy(pConnect->phy1, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t));
+  memcpy(pConnect->phy1addr, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t));
   PHY1_Send(pConnect);
 }
 
@@ -613,7 +613,7 @@ static void mqttsn_send_message(void)
 
     pMessage->Length = Length;
     pMessage->mq.Length = Length;
-    memcpy(pMessage->phy1, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t));
+    memcpy(pMessage->phy1addr, vMQTTSN.GatewayAddr, sizeof(PHY1_ADDR_t));
     PHY1_Send(pMessage);
   }
 }
@@ -678,7 +678,7 @@ void MQTTSN_Init(void)
   mqttsn_disconnect();
   vMQTTSN.pfCnt  = (POLL_TMR_FREQ - 1);
 
-  xTaskCreate(mqttsn_parser_task, "mq1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+  xTaskCreate(mqttsn_parser_task, "mq1", configMINIMAL_STACK_SIZE + 50, NULL, tskIDLE_PRIORITY + 1, NULL );
   xTaskCreate(mqttsn_poll_task, "mq2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
   
 #ifdef PHY2_Send

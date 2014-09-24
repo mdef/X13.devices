@@ -1,9 +1,9 @@
-static const GPIO_TypeDef * pGPIOx[] = {GPIOA, GPIOB, GPIOC};
+static const GPIO_TypeDef * dio_pGPIOx[] = {GPIOA, GPIOB, GPIOC};
 
 static GPIO_TypeDef * dioPortNr2GPIOx(uint8_t PortNr)
 {
   if(PortNr < EXTDIO_MAXPORT_NR)
-    return (GPIO_TypeDef *)pGPIOx[PortNr];
+    return (GPIO_TypeDef *)dio_pGPIOx[PortNr];
 
   return NULL;
 }
@@ -24,6 +24,10 @@ void dioConfigPort(uint8_t PortNr, DIO_PORT_TYPE Mask, eDIOmode_t Mode)
       break;
     case DIO_MODE_OUT:
       GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_OUT;
+      GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+      break;
+    case DIO_MODE_AIN:
+      GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
       GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
       break;
     default:

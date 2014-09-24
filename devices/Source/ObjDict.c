@@ -12,7 +12,9 @@ See LICENSE file for license details.
 
 #include "config.h"
 #include "ext.h"
-//#include "plc.h"
+#ifdef PLC_USED
+#include "plc.h"
+#endif  //  PLC_USED
 
 //////////////////////////
 // Objects List
@@ -71,7 +73,10 @@ static const indextable_t listPredefOD[] =
 // Local variables
 static indextable_t ListOD[OD_MAX_INDEX_LIST];                          // Object's List
 static uint8_t idxUpdate = 0x80;                                        // Poll pointer
-//extern indextable_t PLCexchgOD;
+
+#ifdef PLC_USED
+extern indextable_t PLCexchgOD;
+#endif  //PLC_USED
 
 // PLC and EXT data
 // Bitmap:
@@ -138,8 +143,10 @@ static indextable_t * scanIndexOD(uint16_t index, uint8_t flags)
         if(listPredefOD[i].Index == index)
           return (indextable_t *)&listPredefOD[i];
     }
-//    else    // PLC Area
-//      return &PLCexchgOD;
+#ifdef PLC_USED
+    else    // PLC Area
+      return &PLCexchgOD;
+#endif  //  PLC_USED
   }
 
   return NULL;
@@ -335,8 +342,10 @@ static void od_main_task(void *pvParameters)
   {
     // Read/Update IOs state
     extProc();
+#ifdef PLC_USED
     // Main PLC Task
-    // plcProc();
+    plcProc();
+#endif  // PLC_USED
 
     // Send Data to Broker
     switch(MQTTSN_GetStatus())
@@ -476,7 +485,9 @@ void InitOD(void)
     exchg_data[uiTmp] = 0;
 
   extInit(exchg_data);
-  //plcInit(exchg_data);
+#ifdef PLC_USED
+  plcInit(exchg_data);
+#endif  //  PLC_USED
 
   // Load Saved Variables
   uint16_t pos = 0;
@@ -494,7 +505,7 @@ void InitOD(void)
   // Configure extensions & PnP devices
 //  extConfig();
 
-  xTaskCreate(od_main_task, "od1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+  xTaskCreate(od_main_task, "od1", configMINIMAL_STACK_SIZE + 20, NULL, tskIDLE_PRIORITY + 1, NULL );
 }
 
 /*

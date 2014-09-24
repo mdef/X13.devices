@@ -49,38 +49,45 @@
       <ToolName xmlns="">Simulator</ToolName>
     </com_atmel_avrdbg_tool_simulator>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'A4Sn11' ">
     <ToolchainSettings>
       <AvrGcc>
-        <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
-        <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
-        <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
-        <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
-        <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
-        <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
-        <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
-        <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
-        <avrgcc.compiler.symbols.DefSymbols>
-          <ListValues>
-            <Value>GCC_MEGA_AVR</Value>
-            <Value>NDEBUG</Value>
-            <Value>F_CPU=16000000UL</Value>
-            <Value>CFG_A4SN11=1</Value>
-          </ListValues>
-        </avrgcc.compiler.symbols.DefSymbols>
-        <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
-        <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
-        <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
-        <avrgcc.linker.libraries.Libraries>
-          <ListValues>
-            <Value>libm</Value>
-          </ListValues>
-        </avrgcc.linker.libraries.Libraries>
-      </AvrGcc>
+  <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>GCC_MEGA_AVR</Value>
+      <Value>NDEBUG</Value>
+      <Value>F_CPU=16000000UL</Value>
+      <Value>CFG_A4SN11=1</Value>
+    </ListValues>
+  </avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>../../FreeRTOS/include</Value>
+      <Value>../../FreeRTOS/portable/GCC/AVR_Mega</Value>
+      <Value>../../Source/HAL/Atmel</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.linker.libraries.Libraries>
+    <ListValues>
+      <Value>libm</Value>
+    </ListValues>
+  </avrgcc.linker.libraries.Libraries>
+</AvrGcc>
     </ToolchainSettings>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'A4Sn11d' ">
     <ToolchainSettings>
       <AvrGcc>
         <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
@@ -103,7 +110,7 @@
           <ListValues>
             <Value>../../FreeRTOS/include</Value>
             <Value>../../FreeRTOS/portable/GCC/AVR_Mega</Value>
-            <Value>../../Source/HAL/ATMEL</Value>
+            <Value>../../Source/HAL/Atmel</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
         <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
@@ -124,10 +131,6 @@
     <Compile Include="..\FreeRTOS\include\FreeRTOS.h">
       <SubType>compile</SubType>
       <Link>FreeRTOS\include\FreeRTOS.h</Link>
-    </Compile>
-    <Compile Include="..\FreeRTOS\include\croutine.h">
-      <SubType>compile</SubType>
-      <Link>FreeRTOS\include\croutine.h</Link>
     </Compile>
     <Compile Include="..\FreeRTOS\include\list.h">
       <SubType>compile</SubType>
@@ -164,10 +167,6 @@
     <Compile Include="..\FreeRTOS\include\timers.h">
       <SubType>compile</SubType>
       <Link>FreeRTOS\include\timers.h</Link>
-    </Compile>
-    <Compile Include="..\FreeRTOS\croutine.c">
-      <SubType>compile</SubType>
-      <Link>FreeRTOS\croutine.c</Link>
     </Compile>
     <Compile Include="..\FreeRTOS\list.c">
       <SubType>compile</SubType>
@@ -253,6 +252,18 @@
       <SubType>compile</SubType>
       <Link>Source\EXT\extdio.h</Link>
     </Compile>
+    <Compile Include="..\Source\PHY\CC11\cc11_phy.c">
+      <SubType>compile</SubType>
+      <Link>Source\PHY\CC11\cc11_phy.c</Link>
+    </Compile>
+    <Compile Include="..\Source\PHY\CC11\cc11_phy.h">
+      <SubType>compile</SubType>
+      <Link>Source\PHY\CC11\cc11_phy.h</Link>
+    </Compile>
+    <Compile Include="..\Source\PHY\CC11\cc11_reg.h">
+      <SubType>compile</SubType>
+      <Link>Source\PHY\CC11\cc11_reg.h</Link>
+    </Compile>
     <Compile Include="..\Source\PHY\UART\uart_phy.c">
       <SubType>compile</SubType>
       <Link>Source\PHY\UART\uart_phy.c</Link>
@@ -272,8 +283,9 @@
     <Folder Include="Source" />
     <Folder Include="Source\EXT" />
     <Folder Include="Source\HAL" />
-    <Folder Include="Source\HAL\ATMEL" />
+    <Folder Include="Source\HAL\Atmel" />
     <Folder Include="Source\PHY" />
+    <Folder Include="Source\PHY\CC11" />
     <Folder Include="Source\PHY\UART" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

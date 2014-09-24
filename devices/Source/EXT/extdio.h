@@ -19,4 +19,4 @@ e_MQTTSN_RETURNS_t dioRegisterOD(indextable_t *pIdx);
 void dioDeleteOD(subidx_t * pSubidx);
 void dioProc(void);
 
-#endif
+#endif  //  _EXTDIO_H

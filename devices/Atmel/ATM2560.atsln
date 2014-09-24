@@ -5,14 +5,14 @@ Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "ATM2560", "ATM2560.cproj", 
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|AVR = Debug|AVR
-		Release|AVR = Release|AVR
+		A4SN11|AVR = A4SN11|AVR
+		A4Sn11d|AVR = A4Sn11d|AVR
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E4D43811-D6B0-4A40-BDBF-6BD7BFC3831F}.Debug|AVR.ActiveCfg = Debug|AVR
-		{E4D43811-D6B0-4A40-BDBF-6BD7BFC3831F}.Debug|AVR.Build.0 = Debug|AVR
-		{E4D43811-D6B0-4A40-BDBF-6BD7BFC3831F}.Release|AVR.ActiveCfg = Release|AVR
-		{E4D43811-D6B0-4A40-BDBF-6BD7BFC3831F}.Release|AVR.Build.0 = Release|AVR
+		{E4D43811-D6B0-4A40-BDBF-6BD7BFC3831F}.A4SN11|AVR.ActiveCfg = A4Sn11|AVR
+		{E4D43811-D6B0-4A40-BDBF-6BD7BFC3831F}.A4SN11|AVR.Build.0 = A4Sn11|AVR
+		{E4D43811-D6B0-4A40-BDBF-6BD7BFC3831F}.A4Sn11d|AVR.ActiveCfg = A4Sn11d|AVR
+		{E4D43811-D6B0-4A40-BDBF-6BD7BFC3831F}.A4Sn11d|AVR.Build.0 = A4Sn11d|AVR
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

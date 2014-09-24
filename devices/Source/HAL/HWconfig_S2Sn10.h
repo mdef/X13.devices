@@ -23,9 +23,12 @@ See LICENSE file for license details.
 // DIO Section
 #define DIO_PORT_SIZE               16
 #define EXTDIO_MAXPORT_NR           3                                     // Number of digital Ports
-#define PORTNUM_2_MASK              {(uint16_t)0x66F0, (uint16_t)0x0000, (uint16_t)0x0000}
+#define EXTDIO_PORTNUM2MASK         {(uint16_t)0x66F0, (uint16_t)0x0000, (uint16_t)0x0000}
 // End DIO Section
 
+// Ain Section
+#define EXTAIN_CHN_MASK             0x0F
+// End Ain Section
 // UART Section
 #define USE_UART_2
 
@@ -104,7 +107,7 @@ See LICENSE file for license details.
 #define PHY1_Get                    UART_Get
 #define PHY1_NodeId                 objRFNodeId
 #define PHY1_GateId                 objGateID
-#define UART_ADDR                   phy1
+#define UART_ADDR                   phy1addr
 #define UART_ADDR_t                 uint8_t
 
 void INIT_SYSTEM(void);

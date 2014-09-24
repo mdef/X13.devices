@@ -17,12 +17,20 @@ See LICENSE file for license details.
 #include "EXT/extdio.h"
 #endif  //  EXTDIO_USED
 
+#ifdef EXTAIN_USED
+#include "EXT/extain.h"
+#endif  //  EXTAIN_USED
+
 // Initialise extensions
 void extInit(uint8_t *pBuf)
 {
 #ifdef EXTDIO_USED
   dioInit(&pBuf[EXTDIO_BASE>>3]);
 #endif  //  EXTDIO_USED
+
+#ifdef EXTAIN_USED
+  ainInit(&pBuf[EXTAIN_BASE>>3]);
+#endif  //  EXTAIN_USED
 }
 
 // Check Subindex ->free/busy/invalid
@@ -35,6 +43,10 @@ uint16_t extCheckIdx(subidx_t * pSubidx)
     case objDout:
       return dioCheckIdx(pSubidx);
 #endif  //  EXTDIO_USED
+#ifdef EXTAIN_USED
+    case objAin:
+      return ainCheckIdx(pSubidx);
+#endif  //  EXTAIN_USED
     default:
       break;
   }
@@ -55,6 +67,10 @@ e_MQTTSN_RETURNS_t extRegisterOD(indextable_t * pIdx)
     case objDout:       // Digital(bool) Output's
       return dioRegisterOD(pIdx);
 #endif  //  EXTDIO_USED
+#ifdef EXTAIN_USED
+    case objAin:        // Analog(int16_t) Input's
+      return dioRegisterOD(pIdx);
+#endif  //  EXTAIN_USED
     default:
       break;
   }
@@ -73,6 +89,11 @@ void extDeleteOD(subidx_t * pSubidx)
       dioDeleteOD(pSubidx);
       break;
 #endif  //  EXTDIO_USED
+#ifdef EXTAIN_USED
+    case objAin:
+      ainDeleteOD(pSubidx);
+      break;
+#endif  //  EXTAIN_USED
     default:
       break;
   }
@@ -83,4 +104,7 @@ void extProc(void)
 #ifdef EXTDIO_USED
   dioProc();
 #endif  //  EXTDIO_USED
+#ifdef EXTAIN_USED
+  ainProc();
+#endif  //  EXTAIN_USED
 }

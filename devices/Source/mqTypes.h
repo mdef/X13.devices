@@ -366,9 +366,9 @@ typedef struct sMQ
 {
   union
   {
-    uint8_t         phy1[sizeof(PHY1_ADDR_t)];
+    uint8_t         phy1addr[sizeof(PHY1_ADDR_t)];
 #ifdef PHY2_ADDR_t
-    uint8_t         phy2[sizeof(PHY2_ADDR_t)];
+    uint8_t         phy2addr[sizeof(PHY2_ADDR_t)];
 #endif
   };
   
