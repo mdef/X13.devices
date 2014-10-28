@@ -1,4 +1,8 @@
-void enc28j60_init_hw(void)
+#include "../../config.h"
+
+#ifdef ENC28J60_PHY
+
+void hal_enc28j60_init_hw(void)
 {
   LAN_PORT |= (1<<LAN_PIN_SS);
   LAN_DDR  &= ~(1<<LAN_PIN_MISO);
@@ -8,10 +12,11 @@ void enc28j60_init_hw(void)
   SPSR |= (1<<SPI2X);
 }
 
-
-uint8_t enc28j60exchg(uint8_t data)
+uint8_t hal_enc28j60exchg(uint8_t data)
 {
   SPDR = data;
   while(!(SPSR &(1<<SPIF)));
   return SPDR;
 }
+
+#endif  //  ENC28J60_PHY

@@ -15,58 +15,76 @@ See LICENSE file for license details.
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
 // MQTT-SN Section
-#define MQTTSN_MSG_SIZE         48                // Size of payload(base for all buffers)
+#define MQTTSN_MSG_SIZE         48      // Size of payload(base for all buffers)
+#define MQTTSN_USE_DHCP         1       // Use Automatic address resolution
 
 // Object Dictionary
-#define OD_MAX_INDEX_LIST       16                // Size of identificators list
-#define OD_DEV_SWVERSH          '4'               // Software Version
-#define OD_DEV_SWVERSM          '0'
-#define OD_DEV_SWVERSL          'a'               // Alfa
+#define OD_MAX_INDEX_LIST       16      // Size of identificators list
+#define OD_DEV_SWVERSH          '2'     // Software Version
+#define OD_DEV_SWVERSM          '7'
+#define OD_DEV_SWVERSL          '0'
 
+#define POLL_TMR_FREQ           100     // System Tick Period
+
+#define UART_BaudRate           38400
 #define RF_BASE_FREQ            868300000UL
 
-#define EXTDIO_USED             1
-//#define EXTAIN_USED             1
-//#define PLC_USED                1
+//Optional modules
+#define EXTDIO_USED             1       // Use DIO
+//#define EXTAIN_USED             1       // Use Analogue inputs
 
-#if   (defined CFG_S2EN10)
-#include "HAL/HWconfig_S2En10.h"
-#elif (defined CFG_S2ES10)
-#include "HAL/HWconfig_S2ES10.h"
-#elif (defined CFG_S2SN10)
-#include "HAL/HWconfig_S2Sn10.h"
-#elif (defined CFG_S3EN10)
-#include "HAL/HWconfig_S3En10.h"
-#elif (defined CFG_S3SN10)
-#include "HAL/HWconfig_S3Sn10.h"
-#elif (defined CFG_A1EN11)
-#include "HAL/HWconfig_A1En11.h"
-#elif (defined CFG_A1CN11)
-#include "HAL/HWconfig_A1Cn11.h"
-#elif (defined CFG_A1SC11)
-#include "HAL/HWconfig_A1SC11.h"
-#elif (defined CFG_A1SN11)
-#include "HAL/HWconfig_A1Sn11.h"
-#elif (defined CFG_A3CN11)
-#include "HAL/HWconfig_A3Cn11.h"
-#elif (defined CFG_A3SC11)
-#include "HAL/HWconfig_A3SC11.h"
-#elif (defined CFG_A3SN11)
-#include "HAL/HWconfig_A3Sn11.h"
-#elif (defined CFG_A4SN11)
-#include "HAL/HWconfig_A4Sn11.h"
+//#define DIAG_USED               1       // Enable diagnostic messages
+
+// Include Hardware definitions
+// Atmel
+// ATM328P
+#if     (defined CFG_A1Cn12)
+#include "HAL/HWconfig_A1Cn12.h"
+#elif   (defined CFG_A1En12)
+#include "HAL/HWconfig_A1En12.h"
+#elif   (defined CFG_A1ES12)
+#include "HAL/HWconfig_A1ES12.h"
+#elif   (defined CFG_A1SC12)
+#include "HAL/HWconfig_A1SC12.h"
+#elif   (defined CFG_A1Sn12)
+#include "HAL/HWconfig_A1Sn12.h"
+// ATM1284P
+#elif   (defined CFG_A3SC12)
+#include "HAL/HWconfig_A3SC12.h"
+#elif   (defined CFG_A3Sn12)
+#include "HAL/HWconfig_A3Sn12.h"
+// STM32F051
+#elif   (defined CFG_S2En12)
+#include "HAL/HWconfig_S2En12.h"
+#elif   (defined CFG_S2Sn12)
+#include "HAL/HWconfig_S2Sn12.h"
+// STM32F10x
+#elif   (defined CFG_S3En12)
+#include "HAL/HWconfig_S3En12.h"
+#elif   (defined CFG_S3Sn12)
+#include "HAL/HWconfig_S3Sn12.h"
 #else
 #error Undefined configuration
 #endif  //  Configuration
 
+#include "mqMEM.h"
 #include "mqTypes.h"
 #include "mqttsn.h"
 #include "ObjDict.h"
+#include "diag.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  //  _CONFIG_H

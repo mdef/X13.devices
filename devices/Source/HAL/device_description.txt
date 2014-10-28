@@ -29,7 +29,7 @@ S - Serial(UART)
 R - RFM12
 C - CC11__
 E - ENC28J60
-
+T - I2C(TWI)
 n - none
 
 #define OD_DEV_PHY1                 'S'
@@ -39,8 +39,8 @@ n - none
 Hardware Version
 
 #define OD_DEV_HW_TYP_H             '1'
-#define OD_DEV_HW_TYP_L             '1'
+#define OD_DEV_HW_TYP_L             '2'
 
 Example:
-"R2D2__" Renesas RZ/A1M, with interface type - D as 1st PHY and interface type - 2 as 2nd PHY, HW Version __
+"R2D2__" Renesas RZ/A1M, with interface type - D as 1st PHY and TWI as 2nd PHY, HW Version __
  

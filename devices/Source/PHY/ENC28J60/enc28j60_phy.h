@@ -13,9 +13,19 @@ See LICENSE file for license details.
 #ifndef _ENC28J60_PHY_H
 #define _ENC28J60_PHY_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define LAN_NODE
+
 // API Section
 void ENC28J60_Init(void);
 void ENC28J60_Send(void *pBuf);
-void ENC28J60_Get(void *pBuf);
+void * ENC28J60_Get(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  //  _UART_PHY_H

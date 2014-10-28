@@ -20,16 +20,16 @@ static uint8_t Enc28j60Bank;
 static int16_t gNextPacketPtr;
 
 // HAL
-extern void enc28j60_init_hw(void);
-extern uint8_t enc28j60exchg(uint8_t data);
+void hal_enc28j60_init_hw(void);
+uint8_t hal_enc28j60exchg(uint8_t data);
 
 // Generic SPI write command
 static void enc28j60WriteOp(uint8_t op, uint8_t address, uint8_t data)
 {
   //taskENTER_CRITICAL();
   ENC_SELECT();
-  enc28j60exchg(op | (address & ADDR_MASK));     // issue write command
-  enc28j60exchg(data);
+  hal_enc28j60exchg(op | (address & ADDR_MASK));     // issue write command
+  hal_enc28j60exchg(data);
   ENC_RELEASE();
   //taskEXIT_CRITICAL();
 }
@@ -56,10 +56,10 @@ static uint8_t enc28j60Read(uint8_t address)
     enc28j60SetBank(address); // set the bank
   uint8_t data;
   ENC_SELECT();
-  enc28j60exchg(ENC28J60_READ_CTRL_REG | (address & ADDR_MASK));     // issue read command
+  hal_enc28j60exchg(ENC28J60_READ_CTRL_REG | (address & ADDR_MASK));     // issue read command
   if(address & 0x80)                          // do dummy read if needed
-    enc28j60exchg(0x00);                      // (for mac and mii, see datasheet page 29)
-  data = enc28j60exchg(0);                    // read data
+    hal_enc28j60exchg(0x00);                      // (for mac and mii, see datasheet page 29)
+  data = hal_enc28j60exchg(0);                    // read data
   ENC_RELEASE();
   //taskEXIT_CRITICAL();
   return data;
@@ -86,9 +86,9 @@ static void enc28j60ReadBuffer(uint16_t len, uint8_t* data)
 {
   //taskENTER_CRITICAL();
   ENC_SELECT();
-  enc28j60exchg(ENC28J60_READ_BUF_MEM);          // issue read command
+  hal_enc28j60exchg(ENC28J60_READ_BUF_MEM);          // issue read command
   while(len--)
-    *(data++) = enc28j60exchg(0);                 // read data
+    *(data++) = hal_enc28j60exchg(0);                 // read data
   ENC_RELEASE();
   //taskEXIT_CRITICAL();
 }
@@ -98,9 +98,9 @@ static void enc28j60WriteBuffer(uint16_t len, uint8_t* data)
 {
   //taskENTER_CRITICAL();
   ENC_SELECT();
-  enc28j60exchg(ENC28J60_WRITE_BUF_MEM);         // issue write command
+  hal_enc28j60exchg(ENC28J60_WRITE_BUF_MEM);         // issue write command
   while(len--)
-    enc28j60exchg(*(data++));                    // write data
+    hal_enc28j60exchg(*(data++));                    // write data
   ENC_RELEASE();
   //taskEXIT_CRITICAL();
 }
@@ -133,7 +133,7 @@ static void enc28j60PhyWrite(uint8_t address, uint16_t data)
 void enc28j60Init(uint8_t* macaddr)
 {
   // initialize I/O
-  enc28j60_init_hw();
+  hal_enc28j60_init_hw();
 
   // perform system reset
   enc28j60WriteOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);

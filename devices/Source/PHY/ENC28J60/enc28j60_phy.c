@@ -21,18 +21,25 @@ See LICENSE file for license details.
 
 #define MAX_FRAME_BUF   (sizeof(eth_frame_t) + sizeof(ip_packet_t) + sizeof(udp_packet_t) + MQTTSN_MSG_SIZE)
 
-#define ip_broadcast (ip_addr | ~ip_mask)
+#define SUBNET_BROADCAST    (ip_addr | ~ip_mask)
+#define NET_BROADCAST       0xFFFFFFFF
+
+#if (ENC28J60_PHY == 1)
+#define LAN_ADDR            phy1addr
+#elif (ENC28J60_PHY == 2)
+#define LAN_ADDR            phy2addr
+#endif  //  ENC28J60_PHY
 
 // node MAC & IP addresses
-static uint8_t        mac_addr[6];
-static uint32_t       ip_addr;
-static uint32_t       ip_mask;
-static uint32_t       ip_gateway;
+static uint8_t          mac_addr[6];
+static uint32_t         ip_addr;
+static uint32_t         ip_mask;
+static uint32_t         ip_gateway;
 // ARP record
-static uint32_t       arp_ip_addr;
-static uint8_t        arp_mac_addr[6];
-// Received packets queue 
-static QueueHandle_t  enc_out_queue = NULL;
+static uint32_t         arp_ip_addr;
+static uint8_t          arp_mac_addr[6];
+
+static Queue_t          enc_out_queue = {NULL, NULL, 0, 0};
 
 //////////////////////////////////////////////////////////////////////
 // Ethernet Section
@@ -157,7 +164,7 @@ static void ip_send(uint16_t len, eth_frame_t *pFrame)
   memcpy(&t_ip, ip->target_ip, 4);
 
   // apply route
-  if((t_ip == ip_broadcast) || (t_ip == ADDR_BROADCAST_LAN))
+  if((t_ip == SUBNET_BROADCAST) || (t_ip == NET_BROADCAST))
   {
     memset(pFrame->target_mac, 0xFF, 6);
   }
@@ -256,7 +263,7 @@ static void ip_filter(uint16_t len, eth_frame_t * pFrame)
       break;
 #endif  //  NET_WITH_ICMP
     case IP_PROTOCOL_UDP:
-      if((t_ip == ip_addr) || (t_ip == ip_broadcast) || (t_ip == ADDR_BROADCAST_LAN))
+      if((t_ip == ip_addr) || (t_ip == SUBNET_BROADCAST) || (t_ip == NET_BROADCAST))
         udp_filter(len, pFrame);
       break;
   }
@@ -320,106 +327,109 @@ static void udp_send(uint16_t len, eth_frame_t *pFrame)
 // process UDP packet
 static void udp_filter(uint16_t len, eth_frame_t * pFrame)
 {
-  if(len < sizeof(udp_packet_t))
-    return;
+    if(len < sizeof(udp_packet_t))
+        return;
 
-  ip_packet_t *ip = (void*)(pFrame->data);
-  udp_packet_t *udp = (void*)(ip->data);
+    ip_packet_t *ip = (void*)(pFrame->data);
+    udp_packet_t *udp = (void*)(ip->data);
 
-  enc28j60_GetPacket((void *)udp, sizeof(udp_packet_t));
+    enc28j60_GetPacket((void *)udp, sizeof(udp_packet_t));
   
-  len = htons(udp->len) - sizeof(udp_packet_t);
+    len = htons(udp->len) - sizeof(udp_packet_t);
   
-  if((udp->target_port == MQTTSN_UDP_PORT) && (len <= (sizeof(MQTTSN_MESSAGE_t) + 1)))
-  {
-    // Passive ARP Resolve
-    if(arp_ip_addr == 0)
+    if((udp->target_port == MQTTSN_UDP_PORT) && (len <= (sizeof(MQTTSN_MESSAGE_t) + 1)))
     {
-      memcpy(&arp_ip_addr, ip->sender_ip, 4);
-      memcpy(arp_mac_addr, pFrame->sender_mac, 6);
-    }
+        // Passive ARP Resolve
+        if(arp_ip_addr == 0)
+        {
+            memcpy(&arp_ip_addr, ip->sender_ip, 4);
+            memcpy(arp_mac_addr, pFrame->sender_mac, 6);
+        }
     
-    MQ_t * pRx_buf;
-    pRx_buf = pvPortMalloc(sizeof(MQ_t));
-    if(pRx_buf == NULL)
-      return;
+        MQ_t * pRx_buf = mqAlloc(sizeof(MQ_t));
+        if(pRx_buf == NULL)
+            return;
       
-    enc28j60_GetPacket((void*)pRx_buf->raw, len);
-    memcpy(pRx_buf->LAN_ADDR, ip->sender_ip, 4);
-    pRx_buf->Length = len;
-    xQueueSend(enc_out_queue, &pRx_buf, 0);
-  }
+        enc28j60_GetPacket((void*)pRx_buf->raw, len);
+        memcpy(pRx_buf->LAN_ADDR, ip->sender_ip, 4);
+        pRx_buf->Length = len;
+    
+        if(!mqEnqueue(&enc_out_queue, pRx_buf))
+            mqFree(pRx_buf);
+    }
 }
 // End UDP Section
 //////////////////////////////////////////////////////////////////////
 
 void ENC28J60_Init(void)
 {
-  uint8_t Len;
-  // Read Configuration data
-  Len = sizeof(mac_addr);
-  ReadOD(objMACAddr,    MQTTSN_FL_TOPICID_PREDEF, &Len, (uint8_t *)mac_addr);
-  Len = sizeof(ip_addr);
-  ReadOD(objIPAddr,     MQTTSN_FL_TOPICID_PREDEF, &Len, (uint8_t *)&ip_addr);
-  ReadOD(objIPMask,     MQTTSN_FL_TOPICID_PREDEF, &Len, (uint8_t *)&ip_mask);
-  ReadOD(objIPRouter,   MQTTSN_FL_TOPICID_PREDEF, &Len, (uint8_t *)&ip_gateway);
+    MQ_t * pBuf;
+    while((pBuf = mqDequeue(&enc_out_queue)) != NULL)
+        mqFree(pBuf);
 
-  //initialize enc28j60
-  enc28j60Init(mac_addr);
+    uint8_t Len;
+    // Read Configuration data
+    Len = sizeof(mac_addr);
+    ReadOD(objMACAddr,    MQTTSN_FL_TOPICID_PREDEF, &Len, (uint8_t *)mac_addr);
+    Len = sizeof(ip_addr);
+    ReadOD(objIPAddr,     MQTTSN_FL_TOPICID_PREDEF, &Len, (uint8_t *)&ip_addr);
+    ReadOD(objIPMask,     MQTTSN_FL_TOPICID_PREDEF, &Len, (uint8_t *)&ip_mask);
+    ReadOD(objIPRouter,   MQTTSN_FL_TOPICID_PREDEF, &Len, (uint8_t *)&ip_gateway);
 
-  // Init Variable
-  arp_ip_addr = 0;
+    //initialize enc28j60
+    enc28j60Init(mac_addr);
 
-  if(enc_out_queue == NULL)
-    enc_out_queue = xQueueCreate(4, sizeof(void *));
+    // Init Variable
+    arp_ip_addr = 0;
 }
 
 void ENC28J60_Send(void *pBuf)
 {
-  eth_frame_t * pFrame = (void *)pvPortMalloc(MAX_FRAME_BUF);
-  
-  ip_packet_t *ip = (void*)(pFrame->data);
-  udp_packet_t *udp = (void*)(ip->data);
-
-  memcpy(ip->target_ip, &(((MQ_t *)pBuf)->LAN_ADDR), 4);
-  udp->target_port = MQTTSN_UDP_PORT;
-  udp->sender_port = MQTTSN_UDP_PORT;
-  uint16_t len = ((MQ_t *)pBuf)->Length;
-  memcpy((void*)(udp->data), &(((MQ_t *)pBuf)->raw), len);
-  vPortFree(pBuf);
-  udp_send(len, pFrame);
-  
-  vPortFree(pFrame);
-}
-
-void ENC28J60_Get(void *pBuf)
-{
-  while(xQueueReceive(enc_out_queue, pBuf, 0) != pdTRUE)
-  {
-    if(en28j60_DataRdy())
+    eth_frame_t * pFrame = (void *)mqAlloc(MAX_FRAME_BUF);
+    if(pFrame == NULL)
     {
-      uint16_t len = enc28j60_GetPacketLen();
-      if(len > sizeof(eth_frame_t))
-      {
-        eth_frame_t * pFrame = (void *)pvPortMalloc(MAX_FRAME_BUF);
-
-        if(pFrame != NULL)
-        {
-          enc28j60_GetPacket((void *)pFrame,  sizeof(eth_frame_t));
-
-          if(pFrame->type == ETH_TYPE_ARP)
-            arp_filter(len - sizeof(eth_frame_t), pFrame);
-          else if(pFrame->type == ETH_TYPE_IP)
-            ip_filter(len - sizeof(eth_frame_t), pFrame);
-            
-          vPortFree(pFrame);
-        }
-      }
-      enc28j60_ClosePacket();
+        mqFree(pBuf);
+        return;
     }
 
-    taskYIELD();
-  }
+    ip_packet_t *ip = (void*)(pFrame->data);
+    udp_packet_t *udp = (void*)(ip->data);
+
+    memcpy(ip->target_ip, &(((MQ_t *)pBuf)->LAN_ADDR), 4);
+    udp->target_port = MQTTSN_UDP_PORT;
+    udp->sender_port = MQTTSN_UDP_PORT;
+    uint16_t len = ((MQ_t *)pBuf)->Length;
+    memcpy((void*)(udp->data), &(((MQ_t *)pBuf)->raw), len);
+    mqFree(pBuf);
+    udp_send(len, pFrame);
+  
+    mqFree(pFrame);
 }
 
+void * ENC28J60_Get(void)
+{
+    // Rx Section
+    if(en28j60_DataRdy())
+    {
+        uint16_t len = enc28j60_GetPacketLen();
+       if(len > sizeof(eth_frame_t))
+        {
+            eth_frame_t * pFrame = (void *)mqAlloc(MAX_FRAME_BUF);
+            if(pFrame != NULL)
+            {
+                enc28j60_GetPacket((void *)pFrame,  sizeof(eth_frame_t));
+
+                if(pFrame->type == ETH_TYPE_ARP)
+                    arp_filter(len - sizeof(eth_frame_t), pFrame);
+                else if(pFrame->type == ETH_TYPE_IP)
+                    ip_filter(len - sizeof(eth_frame_t), pFrame);
+            
+                mqFree(pFrame);
+            }
+        }
+        enc28j60_ClosePacket();
+    }
+
+    return mqDequeue(&enc_out_queue);
+}
 #endif  //  ENC28J60_PHY

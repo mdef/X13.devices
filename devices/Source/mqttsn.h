@@ -13,21 +13,15 @@ See LICENSE file for license details.
 #ifndef _MQTTSN_H
 #define _MQTTSN_H
 
-typedef enum e_MQTTSN_POLL_STATUS
-{
-  MQTTSN_POLL_STAT_NOP = 0,
-#ifdef ASLEEP
-  MQTTSN_POLL_STAT_ASLEEP,
-  MQTTSN_POLL_STAT_AWAKE,
-#endif  //  ASLEEP
-  MQTTSN_POLL_STAT_CONNECTED,
-  MQTTSN_POLL_STAT_DISCONNECTED
-}MQTTSN_POLL_STATUS_t;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Current Status
 typedef enum e_MQTTSN_STATUS
 {
   MQTTSN_STATUS_DISCONNECTED = 0,
+  MQTTSN_STATUS_DHCP,
   MQTTSN_STATUS_SEARCHGW,
   MQTTSN_STATUS_OFFLINE,
   MQTTSN_STATUS_PRE_CONNECT,
@@ -41,25 +35,31 @@ typedef enum e_MQTTSN_STATUS
 #endif  //  ASLEEP
 }e_MQTTSN_STATUS_t;
 
+typedef enum e_TRACE_LEVEL
+{
+    lvlDEBUG    = 0,
+    lvlINFO,
+    lvlWARNING,
+    lvlERROR
+}TRACE_LEVEL_t;
+
+void mqttsn_trace_msg(uint8_t Level, MQ_t * pMessage);
+
+void mqttsn_parser_phy1(MQ_t * pPHY1outBuf);
+void mqttsn_parser_phy2(MQ_t * pPHY2outBuf);
+
 void MQTTSN_Init(void);
 e_MQTTSN_STATUS_t MQTTSN_GetStatus(void);
-void MQTTSN_EnqueueMsg(MQ_MSG_t * pMqMsg);
 
-/*
-MQTTS_POLL_STATUS_t MQTTS_Poll(void);
-void MQTTS_Parser(MQ_t * pBuf);
-void MQTTS_ParserBroadcast(MQ_t * pBuf);
-bool MQTTS_DataRdy(void);
-MQ_t * MQTTS_Get(void);
-void MQTTS_SendMsg(e_MQTTS_MSGTYPE_t MsgType, uint8_t Flags, uint16_t TopicId);
-*/
-/*
-#ifdef ASLEEP
-void mqtts_set_TASleep(uint16_t tasleep);
-#endif  //  ASLEEP
-void MQTTS_Publish(uint16_t TopicID, uint8_t Flags);
-void MQTTS_Subscribe(uint8_t Flags, uint8_t Size, uint8_t * ipBuf);
-void MQTTS_Register(uint16_t TopicID, uint8_t Size, uint8_t * ipBuf);
-*/
+void MQTTSN_Poll(void);
+
+bool MQTTSN_CanSend(void);
+void MQTTSN_Send(e_MQTTSN_MSGTYPE_t      MsgType,
+                 uint8_t                 Flags,
+                 uint16_t                TopicId);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
