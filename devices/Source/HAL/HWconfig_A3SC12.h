@@ -59,17 +59,26 @@ See LICENSE file for license details.
 extern "C" {
 #endif
 
-#include "Atmel/hal.h"
+#include "AVR/hal.h"
 #include <util/delay.h>
 
 // DIO Section
+#define EXTDIO_USED                 1
 #define DIO_PORT_SIZE               8
 #define EXTDIO_MAXPORT_NR           3                                     // Number of digital Ports
 #define EXTDIO_PORTNUM2PORT         {(uint16_t)&PORTA, (uint16_t)&PORTB, (uint16_t)&PORTD}
 #define EXTDIO_PORTNUM2MASK         {(uint8_t)0xC3, (uint8_t)0xF0, (uint8_t)0x83}
 // End DIO Section
 
+// PWM Section
+#define EXTPWM_USED                 1
+#define EXTPWM_MAXPORT_NR           3
+#define EXTPWM_PORT2CFG             {0, 9, 8}           // bits 7-3 Timer, bits 2-0 Channel
+#define EXTPWM_PORT2DIO             {11, 28, 29}        // Mapping PWM channel to DIO
+// End PWM Section
+
 // Analogue Inputs
+#define EXTAIN_USED                 1
 #define EXTAIN_MAXPORT_NR           3           // ADC4-ADC5, Vbg
 #define EXTAIN_BASE_2_APIN          {4, 5, 14}
 #define EXTAIN_BASE_2_DIO           {4, 5, 0xFF}
@@ -77,6 +86,7 @@ extern "C" {
 // End Analogue Inputs
 
 // TWI Section
+#define EXTTWI_USED                 1
 #define TWIM_SCL_STAT()             (PINC & (1<<PC0))
 // End TWI Section
 
@@ -88,12 +98,12 @@ extern "C" {
 #define LEDsInit()                  {DDRA |= ((1<<PA0) | (1<<PA1)); PORTA |= (1<<PA0) | (1<<PA1);}
 
 // UART Section
-#define UART_PORT                   PORTD
-#define UART_DDR                    DDRD
-#define UART_RX_PIN                 PD0
-#define UART_TX_PIN                 PD1
+#define UART0_PORT                  PORTD
+#define UART0_DDR                   DDRD
+#define UART0_RX_PIN                PD0
+#define UART0_TX_PIN                PD1
 
-#define USART_USE_PORT              1
+#define UART_PHY_PORT               0
 // End UART Section
 
 // RF Section

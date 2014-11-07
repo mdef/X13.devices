@@ -82,6 +82,7 @@ extern "C" {
 #include "STM32/hal.h"
 
 // DIO Section
+#define EXTDIO_USED                 1
 #define DIO_PORT_SIZE               16
 #define EXTDIO_MAXPORT_NR           3
 #define EXTDIO_PORTNUM2PORT         {GPIOA, GPIOB, GPIOC}
@@ -89,7 +90,7 @@ extern "C" {
 // End DIO Section
 
 // UART Section
-#define USART_USE_PORT              1   //  1 - USART1 PA9,PA10 GPIOA MASK 0x0600, 2 - USART2 PA2,PA3 GPIO MASK 0x000C
+#define UART_PHY_PORT               0   //  0 - USART1 PA9,PA10 GPIOA MASK 0x0600, 1 - USART2 PA2,PA3 GPIO MASK 0x000C
 // End UART Section
 
 #define UART_PHY                    1

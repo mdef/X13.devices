@@ -5,9 +5,22 @@
 extern "C" {
 #endif
 
+#if defined(NDEBUG)
+    #define assert(e)   ((void)0)
+#else // DEBUG
+#if defined(__ASSERT_USE_STDERR)
+    #define assert(e)   ((e) ? (void)0 : __assert(__func__, __FILE__, __LINE__, #e))
+#else // !__ASSERT_USE_STDERR
+    #define assert(e)   { if (!(e)) { while (1); } }
+#endif  // __ASSERT_USE_STDERR
+#endif  // NDEBUG
+
 #if   (defined STM32F0XX_MD)
 #include "stm32f0xx.h"
-#elif ((defined STM32F10X_MD) || (defined STM32F10X_MD_VL))
+#elif defined (STM32F10X_LD) || defined (STM32F10X_LD_VL) || \
+      defined (STM32F10X_MD) || defined (STM32F10X_MD_VL) || \
+      defined (STM32F10X_HD) || defined (STM32F10X_HD_VL) || \
+      defined (STM32F10X_XL) || defined (STM32F10X_CL) 
 #include "stm32f10x.h"
 #endif  //  uC Familie
 
@@ -19,7 +32,7 @@ void halLeaveCritical(void);
 #define LEAVE_CRITICAL_SECTION      halLeaveCritical
 
 #define portBYTE_ALIGNMENT          8
-#define configTOTAL_HEAP_SIZE       1024
+#define configTOTAL_HEAP_SIZE       2048
 
 void StartSheduler(void);
 

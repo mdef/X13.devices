@@ -20,6 +20,7 @@ void hal_dio_configure(uint8_t PortNr, DIO_PORT_TYPE Mask, eDIOmode_t Mode)
             *pDDR  &= ~Mask;
             break;
         case DIO_MODE_OUT:
+        case DIO_MODE_PWM:
             *pDDR  |= Mask;
             break;
         default:

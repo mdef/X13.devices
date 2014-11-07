@@ -30,8 +30,8 @@ extern "C" {
 
 // Object Dictionary
 #define OD_MAX_INDEX_LIST       16      // Size of identificators list
-#define OD_DEV_SWVERSH          '2'     // Software Version
-#define OD_DEV_SWVERSM          '7'
+#define OD_DEV_SWVERSH          '3'     // Software Version
+#define OD_DEV_SWVERSM          '0'
 #define OD_DEV_SWVERSL          '0'
 
 #define POLL_TMR_FREQ           100     // System Tick Period
@@ -40,7 +40,8 @@ extern "C" {
 #define RF_BASE_FREQ            868300000UL
 
 //Optional modules
-#define EXTDIO_USED             1       // Use DIO
+//#define EXTDIO_USED             1       // Use DIO
+//#define EXTPWM_USED             1       // Use PWM
 //#define EXTAIN_USED             1       // Use Analogue inputs
 //#define EXTTWI_USED             1       // Use TWI Devices
 
@@ -70,6 +71,8 @@ extern "C" {
 // STM32F051
 #elif   (defined CFG_S2En12)
 #include "HAL/HWconfig_S2En12.h"
+#elif   (defined CFG_S2SC12)
+#include "HAL/HWconfig_S2SC12.h"
 #elif   (defined CFG_S2Sn12)
 #include "HAL/HWconfig_S2Sn12.h"
 // STM32F10x
