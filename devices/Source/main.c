@@ -12,6 +12,7 @@ See LICENSE file for license details.
 
 #include "config.h"
 
+volatile uint32_t second_count;
 static volatile uint8_t SystemTickCnt;
 
 int main(void)
@@ -71,7 +72,6 @@ int main(void)
     }
 }
 
-
 #ifdef LED1_On
 static uint16_t LED1_mask = 0xFFFF;
 void SetLED1mask(uint16_t mask)
@@ -88,10 +88,23 @@ void SetLED2mask(uint16_t mask)
 }
 #endif  //  LED2_On
 
-
-
 void SystemTick(void)
 {
+#if (POLL_TMR_FREQ < 256)
+    static uint8_t tickcnt = (POLL_TMR_FREQ - 1);
+#else   //  POLL_TMR_FREQ >= 256
+    static uint16_t tickcnt = (POLL_TMR_FREQ - 1);
+#endif
+    if(tickcnt > 0)
+    {
+        tickcnt--;
+    }
+    else
+    {
+        tickcnt = (POLL_TMR_FREQ - 1);
+        second_count++;
+    }
+
 #ifdef LED1_On
     if(LED1_mask & 1)
         LED1_On();
