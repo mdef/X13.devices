@@ -83,11 +83,15 @@ extern "C" {
 
 // DIO Section
 #define EXTDIO_USED                 1
-#define DIO_PORT_SIZE               16
 #define EXTDIO_MAXPORT_NR           3
 #define EXTDIO_PORTNUM2PORT         {GPIOA, GPIOB, GPIOC}
 #define EXTDIO_PORTNUM2MASK         {(uint16_t)0xF800, (uint16_t)0xF01C, (uint16_t)0x1800}
 // End DIO Section
+
+// UART Section
+#define EXTSER_USED                 1
+#define EXTSER_PORT2UART            {1, 0}
+// End UART Section
 
 // ENC Section
 #define ENC_USE_SPI                 1   // SPI1 PA5-PA7

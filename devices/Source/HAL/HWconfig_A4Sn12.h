@@ -114,7 +114,6 @@ extern "C" {
 
 // DIO Section
 #define EXTDIO_USED                 1
-#define DIO_PORT_SIZE               8
 #define EXTDIO_MAXPORT_NR           11                                     // Number of digital Ports
 #define EXTDIO_PORTNUM2PORT         {(uint16_t)&PORTA, (uint16_t)&PORTB, (uint16_t)&PORTC, (uint16_t)&PORTD,  \
                                      (uint16_t)&PORTE, (uint16_t)&PORTF, (uint16_t)&PORTG, (uint16_t)&PORTH,  \
@@ -148,7 +147,25 @@ extern "C" {
 #define UART0_RX_PIN                PE0
 #define UART0_TX_PIN                PE1
 
+#define UART1_PORT                  PORTD
+#define UART1_DDR                   DDRD
+#define UART1_RX_PIN                PD2
+#define UART1_TX_PIN                PD3
+
+#define UART2_PORT                  PORTH
+#define UART2_DDR                   DDRH
+#define UART2_RX_PIN                PH0
+#define UART2_TX_PIN                PH1
+
+#define UART3_PORT                  PORTJ
+#define UART3_DDR                   DDRJ
+#define UART3_RX_PIN                PJ0
+#define UART3_TX_PIN                PJ1
+
 #define UART_PHY_PORT               0
+
+#define EXTSER_USED                 1
+#define EXTSER_PORT2UART            {1,2,3}
 // End UART Section
 
 #define UART_PHY                    1
