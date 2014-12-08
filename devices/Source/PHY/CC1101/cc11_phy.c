@@ -323,6 +323,8 @@ void CC11_Init(void)
     cc11_writeReg(CC11_CHANNR, Channel);
     // Configure PATABLE, No Ramp
     cc11_writeReg(CC11_PATABLE, CC11_RF_POWER);
+    // check of CC11 connected
+    assert(cc11_readReg(CC11_DEVIATN) == CC11_DEVIATN_VAL);
 }
 
 void CC11_Send(void *pBuf)
