@@ -309,11 +309,15 @@ void CC11_Init(void)
     RF_WAIT_LOW_MISO();                     // Wait until MISO goes low
     RF_RELEASE();
 
+    // verify that SPI is working and the correct radio is installed
+    assert((cc11_readReg(CC11_PARTNUM | CC11_STATUS_REGISTER) == 0) && 
+           (cc11_readReg(CC11_VERSION | CC11_STATUS_REGISTER) >= 3));
+
     // Configure CC1101
     uint8_t i;
     for (i=0; i<(sizeof(cc11config)/sizeof(cc11config[0])); i++)
         cc11_writeReg(cc11config[i][0], cc11config[i][1]);
-        
+
     // Load Device ID
     cc11_writeReg(CC11_ADDR, cc11s_NodeID);
     // Load Group ID(Synchro)
@@ -323,8 +327,6 @@ void CC11_Init(void)
     cc11_writeReg(CC11_CHANNR, Channel);
     // Configure PATABLE, No Ramp
     cc11_writeReg(CC11_PATABLE, CC11_RF_POWER);
-    // check of CC11 connected
-    assert(cc11_readReg(CC11_DEVIATN) == CC11_DEVIATN_VAL);
 }
 
 void CC11_Send(void *pBuf)
