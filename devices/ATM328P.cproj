@@ -20,11 +20,11 @@
     <OverrideVtor>false</OverrideVtor>
     <CacheFlash>true</CacheFlash>
     <ProgFlashFromRam>true</ProgFlashFromRam>
-    <RamSnippetAddress />
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
     <UncachedRange />
-    <OverrideVtorValue />
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
     <BootSegment>2</BootSegment>
-    <eraseonlaunchrule>1</eraseonlaunchrule>
+    <eraseonlaunchrule>0</eraseonlaunchrule>
     <AsfFrameworkConfig>
       <framework-data xmlns="">
         <options />
@@ -286,7 +286,16 @@
     <Compile Include="Source\HAL\AVR\hal_uart.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Source\HAL\HWconfig_A1Cn12.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Source\HAL\HWconfig_A1En12.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Source\HAL\HWconfig_A1ES12.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Source\HAL\HWconfig_A1SC12.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Source\HAL\HWconfig_A1Sn12.h">

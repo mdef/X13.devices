@@ -37,16 +37,17 @@ extern "C" {
 #define POLL_TMR_FREQ           100     // System Tick Period
 
 #define UART_BaudRate           38400
-#define RF_BASE_FREQ            868300000UL
+//#define RF_BASE_FREQ            868300000UL
+#define RF_BASE_FREQ            433920000UL
 
 //Optional modules
-//#define EXTDIO_USED             1       // Use DIO
+#define EXTDIO_USED             1       // Use DIO
 //#define EXTPWM_USED             1       // Use PWM
-//#define EXTAIN_USED             1       // Use Analog inputs
-//#define EXTTWI_USED             1       // Use TWI/I2C Devices
+#define EXTAIN_USED             1       // Use Analog inputs
+#define EXTTWI_USED             1       // Use TWI/I2C Devices
 //#define EXTSER_USED             1       // Use Serial Port
 
-//#define DIAG_USED               1       // Enable diagnostic messages
+#define DIAG_USED               1       // Enable diagnostic messages
 
 // Include Hardware definitions
 // Atmel
