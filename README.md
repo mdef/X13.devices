@@ -2,5 +2,5 @@
 
 Project created in [Atmel Studio](http://www.atmel.com/tools/atmelstudio.aspx "")
 
-compiled version for gate located [here](https://github.com/mdef/X13.devices/tree/nano_bin "")
+compiled version for gate located [here](https://github.com/mdef/X13.devices/tree/nano-bin "")
 
